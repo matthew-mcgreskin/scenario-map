@@ -566,6 +566,7 @@ const map = L.map("map", {
 
 // Vessel layer
 const vesselLayer = L.layerGroup().addTo(map);
+const activeVessels = [];
 
 // Activate the hash plugin first so it can read the URL if one exists
 const hash = new L.Hash(map);
@@ -987,7 +988,7 @@ async function loadNtms() {
 }
 
 
-
+//
 
 async function loadVessels() {
     try {
@@ -1001,18 +1002,17 @@ async function loadVessels() {
 
         vessels.forEach(vessel => {
 
-            const latestPoint =
-                vessel.track[vessel.track.length - 1];
+      const currentPoint =
+    vessel.track[0];
 
-	const previousPoint =
-    vessel.track[vessel.track.length - 2];
+const nextPoint =
+    vessel.track[1] || vessel.track[0];
 
-
-	const heading =
-    Math.atan2(
-        latestPoint.lng - previousPoint.lng,
-        latestPoint.lat - previousPoint.lat
-    ) * 180 / Math.PI;
+const heading =
+Math.atan2(
+    nextPoint.lng - currentPoint.lng,
+    nextPoint.lat - currentPoint.lat
+) * 180 / Math.PI;
 	
 
 
@@ -1030,10 +1030,10 @@ L.polyline(trackPoints, {
 }).addTo(vesselLayer);	
 
 
-            L.polygon(
+            const ship = L.polygon(
     getShipShape(
-        latestPoint.lat,
-        latestPoint.lng,
+        currentPoint.lat,
+        currentPoint.lng,
 	heading
     ),
     {
@@ -1049,11 +1049,50 @@ L.polyline(trackPoints, {
 `)
 .addTo(vesselLayer);
 
+
+
+	activeVessels.push({
+    ship: ship,
+    track: vessel.track,
+    currentIndex: 0
+});	
+
+
         });
 
     } catch (err) {
         console.error("Unable to load vessel feed", err);
     }
+}
+
+
+
+//
+
+
+	function advanceSimulation() {
+
+    activeVessels.forEach(vessel => {
+
+        vessel.currentIndex++;
+
+        if (vessel.currentIndex >= vessel.track.length) {
+            vessel.currentIndex = 0;
+        }
+
+        const point =
+            vessel.track[vessel.currentIndex];
+
+        vessel.ship.setLatLngs(
+            getShipShape(
+                point.lat,
+                point.lng,
+                0
+            )
+        );
+
+    });
+
 }
 
 
@@ -1529,6 +1568,8 @@ Promise.all([
 ]).then(([portsSuccess, clubsSuccess, eventsSuccess, ntmsSuccess]) => {
     renderPins();
     renderList();
+
+	setInterval(advanceSimulation, 1000);
 
     window.requestAnimationFrame(() => {
         setTimeout(() => {
