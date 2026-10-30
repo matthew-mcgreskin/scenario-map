@@ -1081,13 +1081,26 @@ L.polyline(trackPoints, {
         }
 
         const point =
-            vessel.track[vessel.currentIndex];
+		vessel.track[vessel.currentIndex];
+
+	const nextIndex =
+    (vessel.currentIndex + 1) % vessel.track.length;
+
+const nextPoint =
+    vessel.track[nextIndex];
+
+const heading =
+    Math.atan2(
+        nextPoint.lng - point.lng,
+        nextPoint.lat - point.lat
+    ) * 180 / Math.PI;
+
 
         vessel.ship.setLatLngs(
             getShipShape(
                 point.lat,
                 point.lng,
-                0
+                heading
             )
         );
 
@@ -1542,16 +1555,36 @@ document.getElementById("mobileList")
     });
 
 	
+const shipHullTemplate = [
+    [0.0030, 0],
+    [0.0010, 0.0010],
+    [-0.0030, 0.0010],
+    [-0.0040, 0],
+    [-0.0030, -0.0010],
+    [0.0010, -0.0010]
+];
+
 function getShipShape(lat, lng, heading) {
-    return [
-        [lat + 0.0030, lng],            // Bow
-        [lat + 0.0010, lng + 0.0010],   // Starboard bow
-        [lat - 0.0030, lng + 0.0010],   // Starboard stern
-        [lat - 0.0040, lng],            // Stern
-        [lat - 0.0030, lng - 0.0010],   // Port stern
-        [lat + 0.0010, lng - 0.0010]    // Port bow
-    ];
-}
+
+    const angle = heading * Math.PI / 180;
+
+    return shipHullTemplate.map(([dLat, dLng]) => {
+
+        const rotatedLat =
+            dLat * Math.cos(angle) -
+            dLng * Math.sin(angle);
+
+        const rotatedLng =
+            dLat * Math.sin(angle) +
+            dLng * Math.cos(angle);
+
+        return [
+            lat + rotatedLat,
+            lng + rotatedLng
+        ];
+
+    });
+}}
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
