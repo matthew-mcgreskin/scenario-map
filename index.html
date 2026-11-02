@@ -1079,28 +1079,26 @@ function advanceSimulation() {
     activeVessels.forEach(vessel => {
 
         vessel.progress += 0.002;
-
-      if (
+if (
     vessel.currentIndex >=
     vessel.track.length - 1
 ) {
-
     vessel.currentIndex =
         vessel.track.length - 1;
 
-    return;
-
+    vessel.progress = 1;
 }
+
 
         const currentPoint =
             vessel.track[vessel.currentIndex];
 
-        let nextIndex =
-            vessel.currentIndex + 1;
+      let nextIndex =
+    vessel.currentIndex + 1;
 
-        if (nextIndex >= vessel.track.length) {
-            nextIndex = vessel.currentIndex;
-        }
+if (nextIndex >= vessel.track.length) {
+    nextIndex = vessel.currentIndex;
+}
 
         const nextPoint =
             vessel.track[nextIndex];
