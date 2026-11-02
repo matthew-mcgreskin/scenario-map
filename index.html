@@ -1696,6 +1696,16 @@ Promise.all([
 
 }, 30);
 
+
+	document
+    .getElementById("pauseReplay")
+    .addEventListener("click", () => {
+
+        simulationRunning = false;
+
+    });
+
+
     window.requestAnimationFrame(() => {
         setTimeout(() => {
             const params = new URLSearchParams(window.location.search);
