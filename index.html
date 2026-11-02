@@ -507,6 +507,19 @@
     </div>
   </header>
 
+
+
+	<div id="replayControls" style="display:none;">
+
+    <button id="playReplay">▶ Play</button>
+
+    <button id="pauseReplay">⏸ Pause</button>
+
+    <button id="resetReplay">⏹ Reset</button>
+
+</div>
+	
+
   <div class="filters" id="filters">
     <button data-filter="all" class="active" type="button">All</button>
     <button data-filter="port" type="button">Ports</button>
@@ -577,6 +590,8 @@ vesselLayer.on("add", () => {
 
     simulationRunning = true;
 
+    document.getElementById("replayControls").style.display = "block";
+
     if (!vesselsLoaded) {
         loadVessels();
         vesselsLoaded = true;
@@ -587,6 +602,8 @@ vesselLayer.on("add", () => {
 vesselLayer.on("remove", () => {
 
     simulationRunning = false;
+
+    document.getElementById("replayControls").style.display = "none";
 
 });
 
