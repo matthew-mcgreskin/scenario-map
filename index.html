@@ -876,30 +876,23 @@ const overlaysTree = {
             ]
         },
         {
-            label: "<strong>SEPA Data</strong>",
-            selectAllCheckbox: true,
-            children: [
-                { label: "Bathing Water Points", layer: sepaPoints },
-                { label: "Bathing Water Polygons", layer: sepaPolygons },
-                { label: "Bathing Water Control Zones", layer: sepaZones },
-                { label: "Bathing Water Signage", layer: sepaSignage }    
-            ]
-        },
-
-
-	{
-    label: "<strong>Replay Data</strong>",
+      {
+    label: "<strong>SEPA Data</strong>",
+    selectAllCheckbox: true,
     children: [
-        {
-            label: "Vessel Replay",
-            layer: vesselLayer
-        }
+        { label: "Bathing Water Points", layer: sepaPoints },
+        { label: "Bathing Water Polygons", layer: sepaPolygons },
+        { label: "Bathing Water Control Zones", layer: sepaZones },
+        { label: "Bathing Water Signage", layer: sepaSignage }
     ]
+},
+
+{
+    label: "Vessel Replay",
+    layer: vesselLayer
 }
 
-
-	
-    ]
+]
 };
 
 
