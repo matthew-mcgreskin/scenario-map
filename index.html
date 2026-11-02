@@ -1074,20 +1074,9 @@ L.polyline(trackPoints, {
     return start + (end - start) * factor;
 }
 
-
 function advanceSimulation() {
 
     activeVessels.forEach(vessel => {
-
-        const currentPoint =
-            vessel.track[vessel.currentIndex];
-
-        const nextIndex =
-            (vessel.currentIndex + 1) %
-            vessel.track.length;
-
-        const nextPoint =
-            vessel.track[nextIndex];
 
         vessel.progress += 0.002;
 
@@ -1097,14 +1086,25 @@ function advanceSimulation() {
 
             vessel.currentIndex++;
 
-            if (
-                vessel.currentIndex >=
-                vessel.track.length - 1
-            ) {
+            // Loop back to start
+            if (vessel.currentIndex >= vessel.track.length) {
                 vessel.currentIndex = 0;
             }
 
         }
+
+        const currentPoint =
+            vessel.track[vessel.currentIndex];
+
+        let nextIndex =
+            vessel.currentIndex + 1;
+
+        if (nextIndex >= vessel.track.length) {
+            nextIndex = 0;
+        }
+
+        const nextPoint =
+            vessel.track[nextIndex];
 
         const lat = interpolate(
             currentPoint.lat,
@@ -1137,7 +1137,6 @@ function advanceSimulation() {
     });
 
 }
-
 
 
 async function loadEvents() {
