@@ -1697,7 +1697,7 @@ Promise.all([
 }, 30);
 
 
-	document
+document
     .getElementById("pauseReplay")
     .addEventListener("click", () => {
 
@@ -1705,6 +1705,13 @@ Promise.all([
 
     });
 
+document
+    .getElementById("playReplay")
+    .addEventListener("click", () => {
+
+        simulationRunning = true;
+
+    });
 
     window.requestAnimationFrame(() => {
         setTimeout(() => {
