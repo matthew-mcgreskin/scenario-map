@@ -1574,16 +1574,15 @@ document.getElementById("mobileList")
 
 	
 const shipHullTemplate = [
-      [0.0020, 0],         // Bow tip
+    [0.0025, 0],          // Bow
 
-    [0.0010, 0.0004],    // Bow shoulder
+    [0.0015, 0.0006],
 
-    [-0.0080, 0.0008],   // Stern starboard
+    [-0.0045, 0.0008],
 
-    [-0.0080, -0.0008],  // Stern port
+    [-0.0045, -0.0008],
 
-    [0.0010, -0.0004]    // Bow shoulder
-    
+    [0.0015, -0.0006]
 ];
 
 function getShipShape(lat, lng, heading) {
