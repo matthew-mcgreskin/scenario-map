@@ -1714,6 +1714,35 @@ document
         simulationRunning = true;
 
     });
+
+
+	
+	document
+    .getElementById("resetReplay")
+    .addEventListener("click", () => {
+
+        simulationRunning = false;
+
+        activeVessels.forEach(vessel => {
+
+            vessel.currentIndex = 0;
+            vessel.progress = 0;
+
+            const startPoint =
+                vessel.track[0];
+
+            vessel.ship.setLatLngs(
+                getShipShape(
+                    startPoint.lat,
+                    startPoint.lng,
+                    0
+                )
+            );
+
+        });
+
+
+
     window.requestAnimationFrame(() => {
         setTimeout(() => {
             const params = new URLSearchParams(window.location.search);
