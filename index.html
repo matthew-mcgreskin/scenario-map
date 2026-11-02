@@ -1080,18 +1080,17 @@ function advanceSimulation() {
 
         vessel.progress += 0.002;
 
-        if (vessel.progress >= 1) {
+      if (
+    vessel.currentIndex >=
+    vessel.track.length - 1
+) {
 
-            vessel.progress = 0;
+    vessel.currentIndex =
+        vessel.track.length - 1;
 
-            vessel.currentIndex++;
+    return;
 
-            // Loop back to start
-            if (vessel.currentIndex >= vessel.track.length) {
-                vessel.currentIndex = 0;
-            }
-
-        }
+}
 
         const currentPoint =
             vessel.track[vessel.currentIndex];
