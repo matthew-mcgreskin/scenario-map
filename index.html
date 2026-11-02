@@ -1054,7 +1054,8 @@ L.polyline(trackPoints, {
 	activeVessels.push({
     ship: ship,
     track: vessel.track,
-    currentIndex: 0
+    currentIndex: 0,
+	progress: 0
 });	
 
 
@@ -1069,40 +1070,69 @@ L.polyline(trackPoints, {
 
 //
 
+	function interpolate(start, end, factor) {
+    return start + (end - start) * factor;
+}
 
-	function advanceSimulation() {
+
+function advanceSimulation() {
 
     activeVessels.forEach(vessel => {
 
-        vessel.currentIndex++;
+        const currentPoint =
+            vessel.track[vessel.currentIndex];
 
-        if (vessel.currentIndex >= vessel.track.length) {
-            vessel.currentIndex = 0;
+        const nextIndex =
+            (vessel.currentIndex + 1) %
+            vessel.track.length;
+
+        const nextPoint =
+            vessel.track[nextIndex];
+
+        vessel.progress += 0.02;
+
+        if (vessel.progress >= 1) {
+
+            vessel.progress = 0;
+
+            vessel.currentIndex++;
+
+            if (
+                vessel.currentIndex >=
+                vessel.track.length - 1
+            ) {
+                vessel.currentIndex = 0;
+            }
+
         }
 
-        const point =
-		vessel.track[vessel.currentIndex];
+        const lat = interpolate(
+            currentPoint.lat,
+            nextPoint.lat,
+            vessel.progress
+        );
 
-	const nextIndex =
-    (vessel.currentIndex + 1) % vessel.track.length;
+        const lng = interpolate(
+            currentPoint.lng,
+            nextPoint.lng,
+            vessel.progress
+        );
 
-const nextPoint =
-    vessel.track[nextIndex];
-
-const heading =
-    Math.atan2(
-        nextPoint.lng - point.lng,
-        nextPoint.lat - point.lat
-    ) * 180 / Math.PI;
-
+        const heading =
+            Math.atan2(
+                nextPoint.lng - currentPoint.lng,
+                nextPoint.lat - currentPoint.lat
+            ) * 180 / Math.PI;
 
         vessel.ship.setLatLngs(
             getShipShape(
-                point.lat,
-                point.lng,
+                lat,
+                lng,
                 heading
             )
         );
+
+        vessel.ship.bringToFront();
 
     });
 
@@ -1606,7 +1636,7 @@ Promise.all([
     renderPins();
     renderList();
 
-	setInterval(advanceSimulation, 1000);
+	setInterval(advanceSimulation, 30);
 
     window.requestAnimationFrame(() => {
         setTimeout(() => {
