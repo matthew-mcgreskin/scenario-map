@@ -1709,10 +1709,11 @@ document
     .getElementById("playReplay")
     .addEventListener("click", () => {
 
+        console.log("Play clicked");
+
         simulationRunning = true;
 
     });
-
     window.requestAnimationFrame(() => {
         setTimeout(() => {
             const params = new URLSearchParams(window.location.search);
