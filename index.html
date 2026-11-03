@@ -1171,17 +1171,19 @@ const lng = interpolate(
     vessel.progress
 );
 
+/*****
 const heading =
     Math.atan2(
         nextPoint.lng - currentPoint.lng,
         nextPoint.lat - currentPoint.lat
     ) * 180 / Math.PI;
+*****/
 
 vessel.ship.setLatLngs(
     getShipShape(
         lat,
         lng,
-        heading
+        0
     )
 );
         vessel.ship.bringToFront();
@@ -1763,7 +1765,7 @@ document
                   openPort(foundNtm.id);
                }
 	      }
-            
+            }
         }, 50);
     });
 
