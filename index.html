@@ -1147,7 +1147,6 @@ function advanceSimulation() {
 
     activeVessels.forEach(vessel => {
 
-        // Already finished
         if (vessel.currentIndex >= vessel.track.length - 1) {
             return;
         }
@@ -1165,33 +1164,32 @@ function advanceSimulation() {
             nextPoint.lat,
             vessel.progress
         );
-const lng = interpolate(
-    currentPoint.lng,
-    nextPoint.lng,
-    vessel.progress
-);
 
+        const lng = interpolate(
+            currentPoint.lng,
+            nextPoint.lng,
+            vessel.progress
+        );
 
-const heading =
-    Math.atan2(
-        nextPoint.lng - currentPoint.lng,
-        nextPoint.lat - currentPoint.lat
-    ) * 180 / Math.PI;
+        const heading =
+            Math.atan2(
+                nextPoint.lng - currentPoint.lng,
+                nextPoint.lat - currentPoint.lat
+            ) * 180 / Math.PI;
 
-vessel.ship.setLatLngs(
-    getShipShape(
-        lat,
-        lng,
-        heading
-    )
-);
+        vessel.ship.setLatLngs(
+            getShipShape(
+                lat,
+                lng,
+                heading
+            )
+        );
 
-vessel.ship.bringToFront();
-   if (vessel.progress >= 1) {
+        vessel.ship.bringToFront();
 
+        if (vessel.progress >= 1) {
             vessel.progress = 0;
             vessel.currentIndex++;
-
         }
 
     });
