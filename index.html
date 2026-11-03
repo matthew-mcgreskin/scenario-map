@@ -1172,33 +1172,15 @@ const lng = interpolate(
 );
 
 
-const heading =
-    Math.atan2(
-        nextPoint.lng - currentPoint.lng,
-        nextPoint.lat - currentPoint.lat
-    ) * 180 / Math.PI;
-
-
 vessel.ship.setLatLngs(
     getShipShape(
         lat,
         lng,
-        heading
+        0
     )
 );
-        vessel.ship.bringToFront();
 
-        if (vessel.progress >= 1) {
-
-            vessel.progress = 0;
-            vessel.currentIndex++;
-
-        }
-
-    });
-
-}
-
+vessel.ship.bringToFront();
 
 async function loadEvents() {
   try {
