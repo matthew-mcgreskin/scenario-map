@@ -1226,6 +1226,18 @@ function advanceSimulation() {
         const nextPoint =
             vessel.track[vessel.currentIndex + 1];
 
+	console.log(
+    "Clock:",
+    timeToMinutes(simulationTime)
+);
+
+console.log(
+    "Current point:",
+    timeToMinutes(currentPoint.time)
+);
+
+
+
         vessel.progress += 0.002;
 
         const lat = interpolate(
