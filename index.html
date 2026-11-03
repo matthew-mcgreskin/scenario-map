@@ -1784,6 +1784,11 @@ document
             vessel.currentIndex = 0;
             vessel.progress = 0;
 
+	simulationTime = activeVessels[0].track[0].time;
+
+document.getElementById("simClock").textContent =
+    simulationTime;
+
 const startPoint =
     vessel.track[0];
 
