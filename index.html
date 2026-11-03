@@ -1734,16 +1734,25 @@ document
             vessel.currentIndex = 0;
             vessel.progress = 0;
 
-            const startPoint =
-                vessel.track[0];
+const startPoint =
+    vessel.track[0];
 
-            vessel.ship.setLatLngs(
-                getShipShape(
-                    startPoint.lat,
-                    startPoint.lng,
-                    0
-                )
-            );
+const nextPoint =
+    vessel.track[1] || vessel.track[0];
+
+const heading =
+    Math.atan2(
+        nextPoint.lng - startPoint.lng,
+        nextPoint.lat - startPoint.lat
+    ) * 180 / Math.PI;
+
+vessel.ship.setLatLngs(
+    getShipShape(
+        startPoint.lat,
+        startPoint.lng,
+        heading
+    )
+);
 
         });
 
