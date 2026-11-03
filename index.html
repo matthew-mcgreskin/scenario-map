@@ -1165,21 +1165,25 @@ function advanceSimulation() {
             nextPoint.lat,
             vessel.progress
         );
+const lng = interpolate(
+    currentPoint.lng,
+    nextPoint.lng,
+    vessel.progress
+);
 
-        const lng = interpolate(
-            currentPoint.lng,
-            nextPoint.lng,
-            vessel.progress
-        );
+const heading =
+    Math.atan2(
+        nextPoint.lng - currentPoint.lng,
+        nextPoint.lat - currentPoint.lat
+    ) * 180 / Math.PI;
 
-        vessel.ship.setLatLngs(
-            getShipShape(
-                lat,
-                lng,
-                0
-            )
-        );
-
+vessel.ship.setLatLngs(
+    getShipShape(
+        lat,
+        lng,
+        heading
+    )
+);
         vessel.ship.bringToFront();
 
         if (vessel.progress >= 1) {
