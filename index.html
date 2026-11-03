@@ -615,6 +615,32 @@ let vesselsLoaded = false;
 let simulationRunning = false;
 let simulationTime = "00:00";
 
+
+function advanceClock() {
+
+    const parts = simulationTime.split(":");
+
+    let hours = parseInt(parts[0], 10);
+    let minutes = parseInt(parts[1], 10);
+
+    minutes++;
+
+    if (minutes >= 60) {
+        minutes = 0;
+        hours++;
+    }
+
+    simulationTime =
+        String(hours).padStart(2, "0") +
+        ":" +
+        String(minutes).padStart(2, "0");
+
+    document.getElementById("simClock").textContent =
+        simulationTime;
+}
+
+
+
 vesselLayer.on("add", () => {
 
     simulationRunning = true;
@@ -1712,14 +1738,17 @@ Promise.all([
     renderPins();
     renderList();
 
-	setInterval(() => {
+setInterval(() => {
 
     if (simulationRunning) {
+
         advanceSimulation();
+
+        advanceClock();
+
     }
 
-}, 30);
-
+}, 1000);
 
 document
     .getElementById("pauseReplay")
