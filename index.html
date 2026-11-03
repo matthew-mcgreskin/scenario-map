@@ -535,6 +535,8 @@
 
     <button id="resetReplay">⏹ Reset</button>
 
+    <span id="simClock">00:00</span>
+
 </div>
 	
 
@@ -1073,6 +1075,9 @@ console.log("Vessels loaded");
 console.log(vessels);
 console.log("Start time:", vessels[0].track[0].time);
 simulationTime = vessels[0].track[0].time;
+
+document.getElementById("simClock").textContent =
+    simulationTime;
 
 console.log("Start time:", simulationTime);
 
