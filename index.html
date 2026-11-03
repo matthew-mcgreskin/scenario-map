@@ -616,6 +616,21 @@ let simulationRunning = false;
 let simulationTime = "00:00";
 
 
+function timeToMinutes(timeString) {
+
+    const parts = timeString.split(":");
+
+    return (
+        parseInt(parts[0], 10) * 60 +
+        parseInt(parts[1], 10)
+    );
+
+}
+
+
+
+
+
 function advanceClock() {
 
     const parts = simulationTime.split(":");
