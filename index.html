@@ -603,6 +603,7 @@ let vesselsLoaded = false;
 
 
 let simulationRunning = false;
+let simulationTime = "00:00";
 
 vesselLayer.on("add", () => {
 
@@ -1068,6 +1069,9 @@ async function loadVessels() {
         }
 
         const vessels = await response.json();
+simulationTime = vessels[0].track[0].time;
+
+console.log("Start time:", simulationTime);
 
         vessels.forEach(vessel => {
 
