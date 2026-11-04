@@ -1934,19 +1934,18 @@ document
 
         simulationRunning = false;
 
-        activeVessels.forEach(vessel => {
+       activeVessels.forEach(vessel => {
 
-            vessel.currentIndex = 0;
-            vessel.progress = 0;
+    vessel.currentIndex = 0;
+    vessel.progress = 0;
 
-	simulationTime = activeVessels[0].track[0].time;
+});
+
+simulationTime = simulationStartTime;
 
 document.getElementById("simClock").textContent =
     simulationTime;
 
-console.log(
-    "End time:",
-    simulationEndTime
 );
 
 const startPoint =
