@@ -1265,6 +1265,16 @@ const progress =
     (clockMinutes - currentMinutes) /
     (nextMinutes - currentMinutes);
 
+
+	const clampedProgress =
+    Math.max(
+        0,
+        Math.min(1, progress)
+    );
+
+vessel.progress = clampedProgress;
+
+
 console.log(
     "Progress:",
     progress
@@ -1286,11 +1296,7 @@ console.log(
 console.log(
     "Current point:",
     timeToMinutes(currentPoint.time)
-);
-
-
-
-        vessel.progress = progress;
+)
 
         const lat = interpolate(
             currentPoint.lat,
