@@ -1237,6 +1237,12 @@ const nextMinutes =
 	const clockMinutes =
     timeToMinutes(simulationTime);
 
+	const vesselStartMinutes =
+    timeToMinutes(vessel.track[0].time);
+
+if (clockMinutes < vesselStartMinutes) {
+    return;
+}
 
 
 	for (let i = 0; i < vessel.track.length - 1; i++) {
