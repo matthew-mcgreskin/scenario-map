@@ -1252,12 +1252,7 @@ const nextMinutes =
         clockMinutes <= endMinutes
     ) {
 
-        console.log(
-            "Clock is between",
-            vessel.track[i].time,
-            "and",
-            vessel.track[i + 1].time
-        );
+        vessel.currentIndex = i;
 
     }
 
