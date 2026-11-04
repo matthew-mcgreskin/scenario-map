@@ -653,10 +653,16 @@ function advanceClock() {
     document.getElementById("simClock").textContent =
         simulationTime;
 
+if (
+    timeToMinutes(simulationTime) >=
+    timeToMinutes(simulationEndTime)
+) {
 
-	console.log(
-    timeToMinutes(simulationTime)
-);
+    simulationRunning = false;
+
+}
+
+
 
 
 }
