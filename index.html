@@ -1237,6 +1237,35 @@ const nextMinutes =
 	const clockMinutes =
     timeToMinutes(simulationTime);
 
+
+
+	for (let i = 0; i < vessel.track.length - 1; i++) {
+
+    const startMinutes =
+        timeToMinutes(vessel.track[i].time);
+
+    const endMinutes =
+        timeToMinutes(vessel.track[i + 1].time);
+
+    if (
+        clockMinutes >= startMinutes &&
+        clockMinutes <= endMinutes
+    ) {
+
+        console.log(
+            "Clock is between",
+            vessel.track[i].time,
+            "and",
+            vessel.track[i + 1].time
+        );
+
+    }
+
+}
+
+
+
+
 const progress =
     (clockMinutes - currentMinutes) /
     (nextMinutes - currentMinutes);
