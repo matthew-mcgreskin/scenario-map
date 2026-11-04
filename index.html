@@ -1233,6 +1233,21 @@ function advanceSimulation() {
 const nextMinutes =
     timeToMinutes(nextPoint.time);
 
+
+	const clockMinutes =
+    timeToMinutes(simulationTime);
+
+const progress =
+    (clockMinutes - currentMinutes) /
+    (nextMinutes - currentMinutes);
+
+console.log(
+    "Progress:",
+    progress
+);
+
+
+
 console.log(
     "Minutes between points:",
     nextMinutes - currentMinutes
