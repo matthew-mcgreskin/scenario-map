@@ -1226,6 +1226,19 @@ function advanceSimulation() {
         const nextPoint =
             vessel.track[vessel.currentIndex + 1];
 
+
+	const currentMinutes =
+    timeToMinutes(currentPoint.time);
+
+const nextMinutes =
+    timeToMinutes(nextPoint.time);
+
+console.log(
+    "Minutes between points:",
+    nextMinutes - currentMinutes
+);
+
+
 	console.log(
     "Clock:",
     timeToMinutes(simulationTime)
