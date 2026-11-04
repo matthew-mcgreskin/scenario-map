@@ -1127,10 +1127,32 @@ async function loadVessels() {
         }
 
         const vessels = await response.json();
-console.log("Vessels loaded");
-console.log(vessels);
-console.log("Start time:", vessels[0].track[0].time);
-simulationTime = vessels[0].track[0].time;
+	let earliestTime = vessels[0].track[0].time;	
+	
+	vessels.forEach(vessel => {
+
+    vessel.track.forEach(point => {
+
+        if (
+            timeToMinutes(point.time) <
+            timeToMinutes(earliestTime)
+        ) {
+            earliestTime = point.time;
+        }
+
+    });
+
+});
+
+
+simulationTime = earliestTime;
+
+	console.log(
+    "Earliest time:",
+    earliestTime
+);
+
+
 
 document.getElementById("simClock").textContent =
     simulationTime;
