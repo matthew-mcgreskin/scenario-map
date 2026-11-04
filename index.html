@@ -1934,20 +1934,19 @@ document
 
         simulationRunning = false;
 
-       activeVessels.forEach(vessel => {
+        activeVessels.forEach(vessel => {
 
-    vessel.currentIndex = 0;
-    vessel.progress = 0;
+            vessel.currentIndex = 0;
+            vessel.progress = 0;
 
-});
+        });
 
-simulationTime = simulationStartTime;
+        simulationTime = simulationStartTime;
 
-document.getElementById("simClock").textContent =
-    simulationTime;
+        document.getElementById("simClock").textContent =
+            simulationTime;
 
-;
-
+    });
 const startPoint =
     vessel.track[0];
 
