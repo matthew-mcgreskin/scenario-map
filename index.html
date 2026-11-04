@@ -1240,6 +1240,15 @@ const nextMinutes =
 	const vesselStartMinutes =
     timeToMinutes(vessel.track[0].time);
 
+
+	console.log(
+    vessel.track[0].time,
+    clockMinutes,
+    vesselStartMinutes
+);
+
+
+
 if (clockMinutes < vesselStartMinutes) {
     return;
 }
