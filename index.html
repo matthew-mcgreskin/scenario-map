@@ -666,10 +666,7 @@ if (
     timeToMinutes(simulationEndTime)
 ) 
 
-console.log(
-    "Stopping at:",
-    simulationTime
-)
+
 
 
 {
@@ -1300,18 +1297,7 @@ const nextMinutes =
     timeToMinutes(vessel.track[0].time);
 
 
-	console.log(
-    vessel.track[0].time,
-    clockMinutes,
-    vesselStartMinutes
 
-console.log(
-    "Last progress:",
-    vessel.progress
-)
-
-
-);
 
 
 
@@ -1356,28 +1342,13 @@ const progress =
 vessel.progress = clampedProgress;
 
 
-console.log(
-    "Progress:",
-    progress
-);
 
 
 
-console.log(
-    "Minutes between points:",
-    nextMinutes - currentMinutes
-);
 
 
-	console.log(
-    "Clock:",
-    timeToMinutes(simulationTime)
-);
 
-console.log(
-    "Current point:",
-    timeToMinutes(currentPoint.time)
-)
+
 
         const lat = interpolate(
             currentPoint.lat,
@@ -1938,7 +1909,7 @@ document
     .getElementById("playReplay")
     .addEventListener("click", () => {
 
-        console.log("Play clicked");
+        
 
         simulationRunning = true;
 
