@@ -664,7 +664,15 @@ function advanceClock() {
 if (
     timeToMinutes(simulationTime) >=
     timeToMinutes(simulationEndTime)
-) {
+) 
+
+console.log(
+    "Stopping at:",
+    simulationTime
+);
+
+
+{
 
     simulationRunning = false;
 
@@ -1296,6 +1304,13 @@ const nextMinutes =
     vessel.track[0].time,
     clockMinutes,
     vesselStartMinutes
+
+console.log(
+    "Last progress:",
+    vessel.progress
+);
+
+
 );
 
 
