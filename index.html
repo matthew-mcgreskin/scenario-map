@@ -1276,26 +1276,7 @@ function advanceSimulation() {
             return;
         }
 
-        const currentPoint =
-            vessel.track[vessel.currentIndex];
-
-        const nextPoint =
-            vessel.track[vessel.currentIndex + 1];
-
-
-	const currentMinutes =
-    timeToMinutes(currentPoint.time);
-
-const nextMinutes =
-    timeToMinutes(nextPoint.time);
-
-
-	const clockMinutes =
-    timeToMinutes(simulationTime);
-
-	const vesselStartMinutes =
-    timeToMinutes(vessel.track[0].time);
-
+        
 
 
 
@@ -1325,6 +1306,17 @@ if (clockMinutes < vesselStartMinutes) {
 
 }
 
+const currentPoint =
+    vessel.track[vessel.currentIndex];
+
+const nextPoint =
+    vessel.track[vessel.currentIndex + 1];
+
+const currentMinutes =
+    timeToMinutes(currentPoint.time);
+
+const nextMinutes =
+    timeToMinutes(nextPoint.time);	
 
 
 
@@ -1889,10 +1881,8 @@ setInterval(() => {
 
     if (simulationRunning) {
 
-	advanceClock();
-
         advanceSimulation();
-
+	advanceClock();
         
 
     }
