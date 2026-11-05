@@ -1279,7 +1279,11 @@ function advanceSimulation() {
         
 
 
+const startMinutes =
+        timeToMinutes(vessel.track[i].time);
 
+    const endMinutes =
+        timeToMinutes(vessel.track[i + 1].time);
 
 
 if (clockMinutes < vesselStartMinutes) {
@@ -1289,11 +1293,7 @@ if (clockMinutes < vesselStartMinutes) {
 
 	for (let i = 0; i < vessel.track.length - 1; i++) {
 
-    const startMinutes =
-        timeToMinutes(vessel.track[i].time);
-
-    const endMinutes =
-        timeToMinutes(vessel.track[i + 1].time);
+    
 
     if (
         clockMinutes >= startMinutes &&
