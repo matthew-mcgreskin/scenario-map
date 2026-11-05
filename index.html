@@ -640,7 +640,7 @@ function advanceClock() {
     let hours = parseInt(parts[0], 10);
     let minutes = parseInt(parts[1], 10);
 
-    minutes++;
+    minutes += replaySpeed;
 
     if (minutes >= 60) {
         minutes = 0;
