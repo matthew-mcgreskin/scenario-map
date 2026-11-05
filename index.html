@@ -1927,10 +1927,37 @@ document
 
         simulationRunning = true;
 
-	document.getElementById("simClock").textContent = "08:01";
+	
 
 
     });
+
+
+document
+    .getElementById("speed1")
+    .addEventListener("click", () => {
+
+        replaySpeed = 1;
+
+    });
+
+document
+    .getElementById("speed2")
+    .addEventListener("click", () => {
+
+        replaySpeed = 2;
+
+    });
+
+document
+    .getElementById("speed4")
+    .addEventListener("click", () => {
+
+        replaySpeed = 4;
+
+    });
+
+
 
 
 	
