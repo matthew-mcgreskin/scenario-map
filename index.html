@@ -1270,83 +1270,69 @@ L.polyline(trackPoints, {
 
 
 function advanceSimulation() {
-    // 1. Force the simulation time to a clean number of minutes
     const clockMinutes = timeToMinutes(simulationTime);
 
     activeVessels.forEach(vessel => {
-        // Safety check to ensure data exists
         if (!vessel || !vessel.track || vessel.track.length === 0) return;
 
         const totalPoints = vessel.track.length;
         const totalStartMinutes = timeToMinutes(vessel.track[0].time);
         const totalEndMinutes = timeToMinutes(vessel.track[totalPoints - 1].time);
 
-        // CASE A: The simulation hasn't reached this ship's timeline yet
+        // Force ship visibility to fix any skipped activation flags
+        if (vessel.ship && typeof vessel.ship.setOpacity === 'function') {
+            vessel.ship.setOpacity(clockMinutes >= totalStartMinutes ? 1 : 0);
+        }
+
+        // CASE A: Clock hasn't reached the ship's start time yet
         if (clockMinutes < totalStartMinutes) {
-            // If you hide ships before they start, make sure to handle visibility here:
-            if (vessel.ship && typeof vessel.ship.setOpacity === 'function') {
-                vessel.ship.setOpacity(0); // Hide until it's time
-            }
+            const firstPoint = vessel.track[0];
+            const nextPoint = vessel.track[1] || firstPoint;
+            const heading = Math.atan2(nextPoint.lng - firstPoint.lng, nextPoint.lat - firstPoint.lat) * 180 / Math.PI;
+            if (vessel.ship) vessel.ship.setLatLngs(getShipShape(firstPoint.lat, firstPoint.lng, heading));
             return; 
         }
 
-        // CASE B: The simulation has passed this ship's complete timeline
+        // CASE B: Clock has passed the entire journey timeline
         if (clockMinutes >= totalEndMinutes) {
             const lastPoint = vessel.track[totalPoints - 1];
             const prevPoint = vessel.track[totalPoints - 2] || lastPoint;
-            
-            const heading = Math.atan2(
-                lastPoint.lng - prevPoint.lng,
-                lastPoint.lat - prevPoint.lat
-            ) * 180 / Math.PI;
-
+            const heading = Math.atan2(lastPoint.lng - prevPoint.lng, lastPoint.lat - prevPoint.lat) * 180 / Math.PI;
             if (vessel.ship) {
-                if (typeof vessel.ship.setOpacity === 'function') vessel.ship.setOpacity(1);
                 vessel.ship.setLatLngs(getShipShape(lastPoint.lat, lastPoint.lng, heading));
                 vessel.ship.bringToFront();
             }
             return; 
         }
 
-        // CASE C: The ship is actively en route (Handles 2x, 4x, or any speed skipping)
-        let currentPoint = vessel.track[0];
-        let nextPoint = vessel.track[1];
-        let currentMinutes = totalStartMinutes;
-        let nextMinutes = timeToMinutes(nextPoint.time);
-
-        // Scan through the track to find exactly which segment wraps our skipped clock time
-        for (let i = 0; i < totalPoints - 1; i++) {
-            const segStart = timeToMinutes(vessel.track[i].time);
-            const segEnd = timeToMinutes(vessel.track[i + 1].time);
-
-            if (clockMinutes >= segStart && clockMinutes <= segEnd) {
-                currentPoint = vessel.track[i];
-                nextPoint = vessel.track[i + 1];
-                currentMinutes = segStart;
-                nextMinutes = segEnd;
-                vessel.currentIndex = i;
+        // CASE C: En Route. Scan BACKWARDS to find the last segment we crossed
+        let matchedIndex = 0;
+        for (let i = totalPoints - 2; i >= 0; i--) {
+            if (clockMinutes >= timeToMinutes(vessel.track[i].time)) {
+                matchedIndex = i;
                 break;
             }
         }
 
-        // Calculate precise percentage progress between these two points
+        vessel.currentIndex = matchedIndex;
+        const currentPoint = vessel.track[matchedIndex];
+        const nextPoint = vessel.track[matchedIndex + 1];
+
+        const currentMinutes = timeToMinutes(currentPoint.time);
+        const nextMinutes = timeToMinutes(nextPoint.time);	
+
         let progress = 0;
         if (nextMinutes > currentMinutes) {
             progress = (clockMinutes - currentMinutes) / (nextMinutes - currentMinutes);
         }
         vessel.progress = Math.max(0, Math.min(1, progress));
 
-        // Interpolate the exact map position matching the fast-forward frame
         const lat = interpolate(currentPoint.lat, nextPoint.lat, vessel.progress);
         const lng = interpolate(currentPoint.lng, nextPoint.lng, vessel.progress);
 
-        const heading = Math.atan2(
-            nextPoint.lng - currentPoint.lng,
-            nextPoint.lat - currentPoint.lat
-        ) * 180 / Math.PI;
+        const heading = Math.atan2(nextPoint.lng - currentPoint.lng, nextPoint.lat - currentPoint.lat) * 180 / Math.PI;
 
         if (vessel.ship) {
-            if (typeof vessel.ship.setOpacity === 'function') vessel.ship.setOpacity(1);
             vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
             vessel.ship.bringToFront();
         }
