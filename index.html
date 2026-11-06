@@ -1272,14 +1272,21 @@ L.polyline(trackPoints, {
 function advanceSimulation() {
     const clockMinutes = timeToMinutes(simulationTime);
 
-    activeVessels.forEach(vessel => {
-        let foundIndex = -1;
+function advanceSimulation() {
+    const clockMinutes = timeToMinutes(simulationTime);
 
+    activeVessels.forEach(vessel => {
+        // Ensure the vessel has a valid track array before processing
+        if (!vessel.track || vessel.track.length === 0) return;
+
+        let foundIndex = -1;
         const finalPointIndex = vessel.track.length - 1;
+        
+        // Correct array index lookups for the absolute start and end times
         const totalStartMinutes = timeToMinutes(vessel.track[0].time);
         const totalEndMinutes = timeToMinutes(vessel.track[finalPointIndex].time);
         
-        // 1. End Snapping Fallback: Clock has jumped past the final track point
+        // 1. End Snapping Fallback: Clock has jumped past or equals the final track point
         if (clockMinutes >= totalEndMinutes) {
             const lastPoint = vessel.track[finalPointIndex];
             const prevPoint = vessel.track[finalPointIndex - 1] || lastPoint;
@@ -1293,9 +1300,8 @@ function advanceSimulation() {
             return; 
         }
 
-        // 2. Start Catch-Up Fallback: Clock hasn't reached the ship's start time yet
+        // 2. Start Waiting Fallback: Clock hasn't reached the ship's start time yet
         if (clockMinutes < totalStartMinutes) {
-            // Keep the ship hidden or at its initial position until its time arrives
             const firstPoint = vessel.track[0];
             const nextPoint = vessel.track[1] || firstPoint;
             const heading = Math.atan2(
@@ -1307,7 +1313,7 @@ function advanceSimulation() {
             return;
         }
 
-        // 3. Segment Search (Now resilient to fast-forward speed jumps)
+        // 3. Segment Search: Finds where the clock falls between any two sequential points
         for (let i = 0; i < vessel.track.length - 1; i++) {
             const startMinutes = timeToMinutes(vessel.track[i].time);
             const endMinutes = timeToMinutes(vessel.track[i + 1].time);
@@ -1318,6 +1324,7 @@ function advanceSimulation() {
             }
         }
 
+        // Safety fallback if no segment matches
         if (foundIndex === -1) {
             return;
         }
@@ -1349,6 +1356,7 @@ function advanceSimulation() {
         vessel.ship.bringToFront();
     });
 }
+
 
 
 
