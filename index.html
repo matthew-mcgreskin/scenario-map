@@ -1270,24 +1270,41 @@ L.polyline(trackPoints, {
 
 
 function advanceSimulation() {
-    // 1. Define the current clock time in minutes
     const clockMinutes = timeToMinutes(simulationTime);
 
     activeVessels.forEach(vessel => {
         let foundIndex = -1;
 
-        // 2. Loop through the track segments to find where the clock matches
+        // 1. Snapping Fallback: If clock has jumped past the final track point, snap to end
+        const finalPointIndex = vessel.track.length - 1;
+        const totalEndMinutes = timeToMinutes(vessel.track[finalPointIndex].time);
+        
+        if (clockMinutes >= totalEndMinutes) {
+            const lastPoint = vessel.track[finalPointIndex];
+            // Look backward from the last point to determine final heading angle
+            const prevPoint = vessel.track[finalPointIndex - 1] || lastPoint;
+            const heading = Math.atan2(
+                lastPoint.lng - prevPoint.lng,
+                lastPoint.lat - prevPoint.lat
+            ) * 180 / Math.PI;
+
+            vessel.ship.setLatLngs(getShipShape(lastPoint.lat, lastPoint.lng, heading));
+            vessel.ship.bringToFront();
+            return; // Skip interpolation since we reached the end
+        }
+
+        // 2. Normal Segment Search
         for (let i = 0; i < vessel.track.length - 1; i++) {
             const startMinutes = timeToMinutes(vessel.track[i].time);
             const endMinutes = timeToMinutes(vessel.track[i + 1].time);
 
             if (clockMinutes >= startMinutes && clockMinutes <= endMinutes) {
                 foundIndex = i;
-                break; // Found the active segment, exit the loop
+                break; 
             }
         }
 
-        // If the clock is outside this specific vessel's track timeline, skip it
+        // If the clock is completely before this specific vessel's timeline, skip it
         if (foundIndex === -1) {
             return;
         }
@@ -1300,7 +1317,6 @@ function advanceSimulation() {
         const currentMinutes = timeToMinutes(currentPoint.time);
         const nextMinutes = timeToMinutes(nextPoint.time);	
 
-        // 3. Safely calculate segment progress ratio
         let progress = 0;
         if (nextMinutes > currentMinutes) {
             progress = (clockMinutes - currentMinutes) / (nextMinutes - currentMinutes);
@@ -1308,7 +1324,6 @@ function advanceSimulation() {
 
         vessel.progress = Math.max(0, Math.min(1, progress));
 
-        // 4. Calculate interpolation coordinates and heading angle
         const lat = interpolate(currentPoint.lat, nextPoint.lat, vessel.progress);
         const lng = interpolate(currentPoint.lng, nextPoint.lng, vessel.progress);
 
@@ -1317,11 +1332,7 @@ function advanceSimulation() {
             nextPoint.lat - currentPoint.lat
         ) * 180 / Math.PI;
 
-        // 5. Update the shape position on map layer
-        vessel.ship.setLatLngs(
-            getShipShape(lat, lng, heading)
-        );
-
+        vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
         vessel.ship.bringToFront();
     });
 }
