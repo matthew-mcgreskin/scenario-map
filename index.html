@@ -1275,13 +1275,13 @@ function advanceSimulation() {
     activeVessels.forEach(vessel => {
         let foundIndex = -1;
 
-        // 1. Snapping Fallback: If clock has jumped past the final track point, snap to end
         const finalPointIndex = vessel.track.length - 1;
+        const totalStartMinutes = timeToMinutes(vessel.track[0].time);
         const totalEndMinutes = timeToMinutes(vessel.track[finalPointIndex].time);
         
+        // 1. End Snapping Fallback: Clock has jumped past the final track point
         if (clockMinutes >= totalEndMinutes) {
             const lastPoint = vessel.track[finalPointIndex];
-            // Look backward from the last point to determine final heading angle
             const prevPoint = vessel.track[finalPointIndex - 1] || lastPoint;
             const heading = Math.atan2(
                 lastPoint.lng - prevPoint.lng,
@@ -1290,10 +1290,24 @@ function advanceSimulation() {
 
             vessel.ship.setLatLngs(getShipShape(lastPoint.lat, lastPoint.lng, heading));
             vessel.ship.bringToFront();
-            return; // Skip interpolation since we reached the end
+            return; 
         }
 
-        // 2. Normal Segment Search
+        // 2. Start Catch-Up Fallback: Clock hasn't reached the ship's start time yet
+        if (clockMinutes < totalStartMinutes) {
+            // Keep the ship hidden or at its initial position until its time arrives
+            const firstPoint = vessel.track[0];
+            const nextPoint = vessel.track[1] || firstPoint;
+            const heading = Math.atan2(
+                nextPoint.lng - firstPoint.lng,
+                nextPoint.lat - firstPoint.lat
+            ) * 180 / Math.PI;
+            
+            vessel.ship.setLatLngs(getShipShape(firstPoint.lat, firstPoint.lng, heading));
+            return;
+        }
+
+        // 3. Segment Search (Now resilient to fast-forward speed jumps)
         for (let i = 0; i < vessel.track.length - 1; i++) {
             const startMinutes = timeToMinutes(vessel.track[i].time);
             const endMinutes = timeToMinutes(vessel.track[i + 1].time);
@@ -1304,7 +1318,6 @@ function advanceSimulation() {
             }
         }
 
-        // If the clock is completely before this specific vessel's timeline, skip it
         if (foundIndex === -1) {
             return;
         }
