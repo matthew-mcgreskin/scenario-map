@@ -1870,18 +1870,26 @@ document
 
     });
 
+// Keep track of the clock interval globally so we don't duplicate it
+let clockIntervalId = null;
+
 document.getElementById("playReplay").addEventListener("click", () => {
-    // 1. Sync the high-precision smooth clock to the current simulation time
+    // 1. If the simulation is already running, do nothing (prevents speed stacking)
+    if (simulationRunning) return;
+
+    // 2. Sync the high-precision smooth clock to the current simulation time
     smoothClockMinutes = timeToMinutes(simulationTime);
-    
-    // 2. Flip the state flag to running
     simulationRunning = true;
 
-    // 3. Kick off your advanceClock interval if you use one (e.g., setInterval(advanceClock, 1000);)
+    // 3. START THE TIMER: Call advanceClock every second (1000ms) to update the text clock
+    // If your original code ticked faster or slower, change the 1000 to match your old interval!
+    if (clockIntervalId) clearInterval(clockIntervalId); 
+    clockIntervalId = setInterval(advanceClock, 1000);
 
     // 4. Fire the smooth frame animation loop
     requestAnimationFrame(advanceSimulation);
 });
+
 
 
 
