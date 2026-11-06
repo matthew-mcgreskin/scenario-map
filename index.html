@@ -1272,9 +1272,6 @@ L.polyline(trackPoints, {
 function advanceSimulation() {
     const clockMinutes = timeToMinutes(simulationTime);
 
-function advanceSimulation() {
-    const clockMinutes = timeToMinutes(simulationTime);
-
     activeVessels.forEach(vessel => {
         // Ensure the vessel has a valid track array before processing
         if (!vessel.track || vessel.track.length === 0) return;
@@ -1355,6 +1352,8 @@ function advanceSimulation() {
         vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
         vessel.ship.bringToFront();
     });
+}
+
 
 
 
