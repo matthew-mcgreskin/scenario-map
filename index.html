@@ -640,44 +640,29 @@ function timeToMinutes(timeString) {
 
 
 function advanceClock() {
-
     const parts = simulationTime.split(":");
 
     let hours = parseInt(parts[0], 10);
     let minutes = parseInt(parts[1], 10);
 
-    minutes += replaySpeed;
+    minutes += parseInt(replaySpeed, 10); // Ensure it's a number, not a string
 
+    // Correctly handle minute overflows without losing skipped minutes
     if (minutes >= 60) {
-        minutes = 0;
-        hours++;
+        hours += Math.floor(minutes / 60);
+        minutes = minutes % 60;
     }
 
-    simulationTime =
+    simulationTime = 
         String(hours).padStart(2, "0") +
         ":" +
         String(minutes).padStart(2, "0");
 
-    document.getElementById("simClock").textContent =
-        simulationTime;
+    document.getElementById("simClock").textContent = simulationTime;
 
-if (
-    timeToMinutes(simulationTime) >
-    timeToMinutes(simulationEndTime)
-) 
-
-
-
-
-{
-
-    simulationRunning = false;
-
-}
-
-
-
-
+    if (timeToMinutes(simulationTime) > timeToMinutes(simulationEndTime)) {
+        simulationRunning = false;
+    }
 }
 
 
@@ -1276,10 +1261,12 @@ function advanceSimulation() {
         if (!vessel || !vessel.track || vessel.track.length === 0) return;
 
         const totalPoints = vessel.track.length;
+        
+        // FIXED: Explicitly use index [0] for the start time
         const totalStartMinutes = timeToMinutes(vessel.track[0].time);
         const totalEndMinutes = timeToMinutes(vessel.track[totalPoints - 1].time);
 
-        // Force ship visibility to fix any skipped activation flags
+        // Force visibility toggles to account for fast speed jumps
         if (vessel.ship && typeof vessel.ship.setOpacity === 'function') {
             vessel.ship.setOpacity(clockMinutes >= totalStartMinutes ? 1 : 0);
         }
@@ -1293,7 +1280,7 @@ function advanceSimulation() {
             return; 
         }
 
-        // CASE B: Clock has passed the entire journey timeline
+        // CASE B: Clock has passed the entire journey timeline (Snap to Destination)
         if (clockMinutes >= totalEndMinutes) {
             const lastPoint = vessel.track[totalPoints - 1];
             const prevPoint = vessel.track[totalPoints - 2] || lastPoint;
@@ -1305,7 +1292,7 @@ function advanceSimulation() {
             return; 
         }
 
-        // CASE C: En Route. Scan BACKWARDS to find the last segment we crossed
+        // CASE C: En Route. Scan backwards to find the current active segment
         let matchedIndex = 0;
         for (let i = totalPoints - 2; i >= 0; i--) {
             if (clockMinutes >= timeToMinutes(vessel.track[i].time)) {
@@ -1338,6 +1325,7 @@ function advanceSimulation() {
         }
     });
 }
+
 
 
 
