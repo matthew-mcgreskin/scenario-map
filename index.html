@@ -623,6 +623,7 @@ let simulationTime = "00:00";
 let simulationEndTime = "00:00";
 let simulationStartTime = "00:00";
 let replaySpeed = 1;
+let smoothClockMinutes = 0; // Tracks the continuous float time for rendering
 
 function timeToMinutes(timeString) {
 
@@ -640,18 +641,15 @@ function timeToMinutes(timeString) {
 
 
 function advanceClock() {
-    const parts = simulationTime.split(":");
+    if (!simulationRunning) return;
 
-    let hours = parseInt(parts[0], 10);
-    let minutes = parseInt(parts[1], 10);
+    // 1. Advance the fine-grained continuous time based on your replay speed
+    // Adjust the division factor if your main interval loop ticks faster/slower than 1 second
+    smoothClockMinutes += (parseInt(replaySpeed, 10) / 60);
 
-    minutes += parseInt(replaySpeed, 10); // Ensure it's a number, not a string
-
-    // Correctly handle minute overflows without losing skipped minutes
-    if (minutes >= 60) {
-        hours += Math.floor(minutes / 60);
-        minutes = minutes % 60;
-    }
+    // 2. Synchronize the readable clock string for the UI
+    const hours = Math.floor(smoothClockMinutes / 60);
+    const minutes = Math.floor(smoothClockMinutes % 60);
 
     simulationTime = 
         String(hours).padStart(2, "0") +
@@ -660,16 +658,21 @@ function advanceClock() {
 
     document.getElementById("simClock").textContent = simulationTime;
 
-    if (timeToMinutes(simulationTime) > timeToMinutes(simulationEndTime)) {
+    // End condition check
+    if (smoothClockMinutes > timeToMinutes(simulationEndTime)) {
         simulationRunning = false;
     }
 }
 
 
 
+
 vesselLayer.on("add", () => {
 
+   /*
     simulationRunning = true;
+   */
+
 
 document.getElementById("replayControls").style.display = "flex";
 
@@ -1255,23 +1258,22 @@ L.polyline(trackPoints, {
 
 
 function advanceSimulation() {
-    const clockMinutes = timeToMinutes(simulationTime);
+    // Uses the high-precision smoothClockMinutes instead of the truncated string clock
+    const clockMinutes = smoothClockMinutes;
 
     activeVessels.forEach(vessel => {
         if (!vessel || !vessel.track || vessel.track.length === 0) return;
 
         const totalPoints = vessel.track.length;
-        
-        // FIXED: Explicitly use index [0] for the start time
         const totalStartMinutes = timeToMinutes(vessel.track[0].time);
         const totalEndMinutes = timeToMinutes(vessel.track[totalPoints - 1].time);
 
-        // Force visibility toggles to account for fast speed jumps
+        // Visibility Toggles
         if (vessel.ship && typeof vessel.ship.setOpacity === 'function') {
             vessel.ship.setOpacity(clockMinutes >= totalStartMinutes ? 1 : 0);
         }
 
-        // CASE A: Clock hasn't reached the ship's start time yet
+        // CASE A: Not started yet
         if (clockMinutes < totalStartMinutes) {
             const firstPoint = vessel.track[0];
             const nextPoint = vessel.track[1] || firstPoint;
@@ -1280,7 +1282,7 @@ function advanceSimulation() {
             return; 
         }
 
-        // CASE B: Clock has passed the entire journey timeline (Snap to Destination)
+        // CASE B: Reached Destination
         if (clockMinutes >= totalEndMinutes) {
             const lastPoint = vessel.track[totalPoints - 1];
             const prevPoint = vessel.track[totalPoints - 2] || lastPoint;
@@ -1292,7 +1294,7 @@ function advanceSimulation() {
             return; 
         }
 
-        // CASE C: En Route. Scan backwards to find the current active segment
+        // CASE C: En Route (Smooth Sub-Minute Segment Interpolation)
         let matchedIndex = 0;
         for (let i = totalPoints - 2; i >= 0; i--) {
             if (clockMinutes >= timeToMinutes(vessel.track[i].time)) {
@@ -1310,6 +1312,7 @@ function advanceSimulation() {
 
         let progress = 0;
         if (nextMinutes > currentMinutes) {
+            // This now returns a true float value (e.g. 0.4523 instead of just 0 or 1)
             progress = (clockMinutes - currentMinutes) / (nextMinutes - currentMinutes);
         }
         vessel.progress = Math.max(0, Math.min(1, progress));
@@ -1324,6 +1327,11 @@ function advanceSimulation() {
             vessel.ship.bringToFront();
         }
     });
+
+    // Request the browser to execute this function on the very next screen refresh frame
+    if (simulationRunning) {
+        requestAnimationFrame(advanceSimulation);
+    }
 }
 
 
@@ -1862,18 +1870,19 @@ document
 
     });
 
-document
-    .getElementById("playReplay")
-    .addEventListener("click", () => {
+document.getElementById("playReplay").addEventListener("click", () => {
+    // 1. Sync the high-precision smooth clock to the current simulation time
+    smoothClockMinutes = timeToMinutes(simulationTime);
+    
+    // 2. Flip the state flag to running
+    simulationRunning = true;
 
-        
+    // 3. Kick off your advanceClock interval if you use one (e.g., setInterval(advanceClock, 1000);)
 
-        simulationRunning = true;
+    // 4. Fire the smooth frame animation loop
+    requestAnimationFrame(advanceSimulation);
+});
 
-	
-
-
-    });
 
 
 document
