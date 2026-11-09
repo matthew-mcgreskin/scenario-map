@@ -1906,11 +1906,13 @@ document.getElementById("resetReplay").addEventListener("click", () => {
     if (clockIntervalId) clearInterval(clockIntervalId);
 
     activeVessels.forEach(vessel => {
+        // Ensure track exists and has at least one coordinate
         if (!vessel.track || vessel.track.length === 0) return;
 
         vessel.currentIndex = 0;
         vessel.progress = 0;
 
+        // FIX: Extract the first coordinate array element [0]
         const startPoint = vessel.track[0];
 
         vessel.ship.setLatLngs(
