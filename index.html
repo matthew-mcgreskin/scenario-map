@@ -643,11 +643,10 @@ function timeToMinutes(timeString) {
 function advanceClock() {
     if (!simulationRunning) return;
 
-    // 1. Advance the fine-grained continuous time based on your replay speed
-    // Adjust the division factor if your main interval loop ticks faster/slower than 1 second
-    smoothClockMinutes += (parseInt(replaySpeed, 10) / 60);
+    // FIX: Advance time cleanly by the whole speed integer value
+    smoothClockMinutes += parseInt(replaySpeed, 10);
 
-    // 2. Synchronize the readable clock string for the UI
+    // Track standard 24h clock conversions
     const hours = Math.floor(smoothClockMinutes / 60);
     const minutes = Math.floor(smoothClockMinutes % 60);
 
@@ -658,12 +657,12 @@ function advanceClock() {
 
     document.getElementById("simClock").textContent = simulationTime;
 
-    // End condition check
+    // Halt if boundary limits are crossed
     if (smoothClockMinutes > timeToMinutes(simulationEndTime)) {
         simulationRunning = false;
+        if (clockIntervalId) clearInterval(clockIntervalId);
     }
 }
-
 
 
 
@@ -1855,101 +1854,78 @@ setInterval(() => {
     if (simulationRunning) {
 
         advanceSimulation();
-	advanceClock();
-        
+	advanceClock();     
 
     }
 
 }, 1000);
 
-document
-    .getElementById("pauseReplay")
-    .addEventListener("click", () => {
-
-        simulationRunning = false;
-
-    });
-
-// Keep track of the clock interval globally so we don't duplicate it
+// 1. Declare the clock interval globally at the very top of this block
 let clockIntervalId = null;
 
+// 2. Play Button
 document.getElementById("playReplay").addEventListener("click", () => {
-    // 1. If the simulation is already running, do nothing (prevents speed stacking)
+    // If the simulation is already running, do nothing (prevents speed stacking)
     if (simulationRunning) return;
 
-    // 2. Sync the high-precision smooth clock to the current simulation time
+    // Sync the high-precision smooth clock to the current simulation time
     smoothClockMinutes = timeToMinutes(simulationTime);
     simulationRunning = true;
 
-    // 3. START THE TIMER: Call advanceClock every second (1000ms) to update the text clock
-    // If your original code ticked faster or slower, change the 1000 to match your old interval!
+    // START THE TIMER: Call advanceClock every second (1000ms) to update the text clock
     if (clockIntervalId) clearInterval(clockIntervalId); 
     clockIntervalId = setInterval(advanceClock, 1000);
 
-    // 4. Fire the smooth frame animation loop
+    // Fire the smooth frame animation loop
     requestAnimationFrame(advanceSimulation);
 });
 
+// 3. Pause Button
+document.getElementById("pauseReplay").addEventListener("click", () => {
+    simulationRunning = false;
+    // Clear the clock timer so it stops ticking
+    if (clockIntervalId) clearInterval(clockIntervalId);
+});
 
+// 4. Reset Button
+document.getElementById("resetReplay").addEventListener("click", () => {
+    simulationRunning = false;
+    // Clear the clock timer so it stops ticking
+    if (clockIntervalId) clearInterval(clockIntervalId);
 
-
-document
-    .getElementById("speed1")
-    .addEventListener("click", () => {
-
-        replaySpeed = 1;
-
-    });
-
-document
-    .getElementById("speed2")
-    .addEventListener("click", () => {
-
-        replaySpeed = 2;
-
-    });
-
-document
-    .getElementById("speed4")
-    .addEventListener("click", () => {
-
-        replaySpeed = 4;
-
-    });
-
-
-
-
-	
-document
-    .getElementById("resetReplay")
-    .addEventListener("click", () => {
-
-        simulationRunning = false;
-
-        activeVessels.forEach(vessel => {
+    activeVessels.forEach(vessel => {
         if (!vessel.track || vessel.track.length === 0) return;
 
-            vessel.currentIndex = 0;
-            vessel.progress = 0;
+        vessel.currentIndex = 0;
+        vessel.progress = 0;
 
-            const startPoint =
-                vessel.track[0];
+        const startPoint = vessel.track[0];
 
-            vessel.ship.setLatLngs(
-                getShipShape(
-                    startPoint.lat,
-                    startPoint.lng,
-                    0
-                )
-            );
-
-        });
-
-        simulationTime = simulationStartTime;
-        document.getElementById("simClock").textContent = simulationTime;
-
+        vessel.ship.setLatLngs(
+            getShipShape(
+                startPoint.lat,
+                startPoint.lng,
+                0
+            )
+        );
     });
+
+    simulationTime = simulationStartTime;
+    document.getElementById("simClock").textContent = simulationTime;
+});
+
+// 5. Speed Multiplier Buttons
+document.getElementById("speed1").addEventListener("click", () => {
+    replaySpeed = 1;
+});
+
+document.getElementById("speed2").addEventListener("click", () => {
+    replaySpeed = 2;
+});
+
+document.getElementById("speed4").addEventListener("click", () => {
+    replaySpeed = 4;
+});
 
 
 
