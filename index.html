@@ -1854,6 +1854,27 @@ Promise.all([
 // 1. Declare the clock interval globally at the very top of this block
 let clockIntervalId = null;
 
+// Helper function to turn off all highlights and highlight the clicked button
+function highlightSpeedButton(activeId) {
+    // Reset all buttons to normal styling
+    ["speed1", "speed2", "speed4"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.style.backgroundColor = ""; // Reset background color
+            btn.style.color = "";           // Reset text color
+            btn.style.fontWeight = "normal";
+        }
+    });
+
+    // Highlight the selected button bright blue with white text
+    const activeBtn = document.getElementById(activeId);
+    if (activeBtn) {
+        activeBtn.style.backgroundColor = "#007bff"; 
+        activeBtn.style.color = "#ffffff";           
+        activeBtn.style.fontWeight = "bold";
+    }
+}
+
 // 2. Play Button
 document.getElementById("playReplay").addEventListener("click", () => {
     // If the simulation is already running, do nothing (prevents speed stacking)
@@ -1903,39 +1924,45 @@ document.getElementById("resetReplay").addEventListener("click", () => {
 
     simulationTime = simulationStartTime;
     document.getElementById("simClock").textContent = simulationTime;
+
+    // Reset the speed setting back to Speed 1 visually and logically
+    replaySpeed = 1;
+    highlightSpeedButton("speed1");
 });
 
 // 5. Speed Multiplier Buttons
 document.getElementById("speed1").addEventListener("click", () => {
     replaySpeed = 1;
+    highlightSpeedButton("speed1");
 });
 
 document.getElementById("speed2").addEventListener("click", () => {
     replaySpeed = 2;
+    highlightSpeedButton("speed2");
 });
 
 document.getElementById("speed4").addEventListener("click", () => {
     replaySpeed = 4;
+    highlightSpeedButton("speed4");
 });
 
+// 6. URL Parameter Check Loop (Keep exactly as it was)
+window.requestAnimationFrame(() => {
+    setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        const ntmFromUrl = params.get('ntm');
+        if (ntmFromUrl) {
+           const foundNtm = ports.find(item => item.id === `ntm-${ntmFromUrl}`);
+           if (foundNtm) {
+              if (Number.isFinite(foundNtm.lat) && Number.isFinite(foundNtm.lng)) {
+                  map.setView([foundNtm.lat, foundNtm.lng], 14);
+              }
+              openPort(foundNtm.id);
+           }
+        }
+    }, 50);
+});
 
-
-    window.requestAnimationFrame(() => {
-        setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
-            const ntmFromUrl = params.get('ntm');
-            if (ntmFromUrl) {
-               const foundNtm = ports.find(item => item.id === `ntm-${ntmFromUrl}`);
-               if (foundNtm) {
-                  if (Number.isFinite(foundNtm.lat) &&
-    Number.isFinite(foundNtm.lng)) {
-    map.setView([foundNtm.lat, foundNtm.lng], 14);
-}
-                  openPort(foundNtm.id);
-               }
-	      }
-        }, 50);
-    });
 
 
     const failures = [];
