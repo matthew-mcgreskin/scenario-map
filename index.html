@@ -1849,16 +1849,7 @@ Promise.all([
     renderPins();
     renderList();
 
-setInterval(() => {
 
-    if (simulationRunning) {
-
-        advanceSimulation();
-	advanceClock();     
-
-    }
-
-}, 1000);
 
 // 1. Declare the clock interval globally at the very top of this block
 let clockIntervalId = null;
