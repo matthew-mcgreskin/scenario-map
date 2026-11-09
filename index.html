@@ -1257,6 +1257,10 @@ L.polyline(trackPoints, {
 
 
 function advanceSimulation() {
+
+	 // FIX: Instantly kill the animation loop if simulation is paused or reset
+    if (!simulationRunning) return;
+
     // Uses the high-precision smoothClockMinutes instead of the truncated string clock
     const clockMinutes = smoothClockMinutes;
 
@@ -1901,20 +1905,20 @@ document.getElementById("pauseReplay").addEventListener("click", () => {
 
 // 4. Reset Button
 document.getElementById("resetReplay").addEventListener("click", () => {
+    // 1. Instantly halt the loops before modifying positions
     simulationRunning = false;
-    // Clear the clock timer so it stops ticking
     if (clockIntervalId) clearInterval(clockIntervalId);
 
     activeVessels.forEach(vessel => {
-        // Ensure track exists and has at least one coordinate
         if (!vessel.track || vessel.track.length === 0) return;
 
+        // 2. Clear out index steps
         vessel.currentIndex = 0;
         vessel.progress = 0;
 
-        // FIX: Extract the first coordinate array element [0]
-        const startPoint = vessel.track[0];
-
+        // 3. Reset the hull position to index 0
+        const startPoint = vessel.track;
+        
         vessel.ship.setLatLngs(
             getShipShape(
                 startPoint.lat,
@@ -1924,10 +1928,11 @@ document.getElementById("resetReplay").addEventListener("click", () => {
         );
     });
 
+    // 4. Reset time metrics
     simulationTime = simulationStartTime;
     document.getElementById("simClock").textContent = simulationTime;
 
-    // Reset the speed setting back to Speed 1 visually and logically
+    // 5. Reset the speed setting buttons visually
     replaySpeed = 1;
     highlightSpeedButton("speed1");
 });
