@@ -1916,20 +1916,25 @@ document.getElementById("resetReplay").addEventListener("click", () => {
         vessel.currentIndex = 0;
         vessel.progress = 0;
 
-        // 3. Reset the hull position to index 0
-        const startPoint = vessel.track;
+        // FIXED: Access the first element of the track array [0]
+        const startPoint = vessel.track[0];
         
+        // Calculate original heading if a second point exists to avoid snapping to 0° north
+        const nextPoint = vessel.track[1] || startPoint;
+        const initialHeading = Math.atan2(nextPoint.lng - startPoint.lng, nextPoint.lat - startPoint.lat) * 180 / Math.PI;
+
         vessel.ship.setLatLngs(
             getShipShape(
                 startPoint.lat,
                 startPoint.lng,
-                0
+                initialHeading
             )
         );
     });
 
-    // 4. Reset time metrics
+    // 4. Reset time metrics & high-precision continuous time float
     simulationTime = simulationStartTime;
+    smoothClockMinutes = timeToMinutes(simulationStartTime);
     document.getElementById("simClock").textContent = simulationTime;
 
     // 5. Reset the speed setting buttons visually
@@ -1937,11 +1942,6 @@ document.getElementById("resetReplay").addEventListener("click", () => {
     highlightSpeedButton("speed1");
 });
 
-// 5. Speed Multiplier Buttons
-document.getElementById("speed1").addEventListener("click", () => {
-    replaySpeed = 1;
-    highlightSpeedButton("speed1");
-});
 
 document.getElementById("speed2").addEventListener("click", () => {
     replaySpeed = 2;
