@@ -1932,7 +1932,7 @@ function advanceSimulation() {
     });
 }
 
-// MODIFIED: Restores the original layout string format
+// MODIFIED: Accelerates clock string changes based on active playback speed multipliers
 function runSmoothSimulationLoop(timestamp) {
     if (!simulationRunning) {
         lastFrameTimestamp = null;
@@ -1948,14 +1948,15 @@ function runSmoothSimulationLoop(timestamp) {
     lastFrameTimestamp = timestamp;
 
     // 2. Convert real milliseconds into running simulation minutes
+    // (At 1x speed, 1 real minute = 1 sim minute. At 4x speed, 1 real minute = 4 sim minutes)
     const minutesDelta = (deltaMs / 60000) * parseInt(replaySpeed, 10);
     smoothClockMinutes += minutesDelta;
 
-    // 3. FIXED: Calculate exact fields but cleanly hide seconds from the main text string
+    // 3. FIXED: Extract fields using floor to match HH:MM structure cleanly
     const hours = Math.floor(smoothClockMinutes / 60);
     const minutes = Math.floor(smoothClockMinutes % 60);
 
-    // RESTORED: Clean format matching your layout parameters
+    // Keep layout in strict compliance with your original parser requirements
     simulationTime = String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
 
     // 4. Update the live interface text node element
@@ -1977,7 +1978,6 @@ function runSmoothSimulationLoop(timestamp) {
     // Queue up the next refresh frame loop callback hook
     requestAnimationFrame(runSmoothSimulationLoop);
 }
-
 
 
 // 2. Play Button
