@@ -1856,7 +1856,7 @@ Promise.all([
 
 // 1. Declare the clock interval and animation tracking variable globally
 let clockIntervalId = null;
-let lastFrameTimestamp = null; // FIXED: Tracks sub-second delta gaps across browser frame refreshes
+let lastFrameTimestamp = null; 
 
 // Helper function to turn off all highlights and highlight the clicked button
 function highlightSpeedButton(activeId) {
@@ -1877,6 +1877,61 @@ function highlightSpeedButton(activeId) {
     }
 }
 
+// MODIFIED: Linear interpolation function to find coordinates between track segments
+function interpolatePosition(p1, p2, ratio) {
+    return {
+        lat: p1.lat + (p2.lat - p1.lat) * ratio,
+        lng: p1.lng + (p2.lng - p1.lng) * ratio
+    };
+}
+
+// FIXED: Smoothly updates ship layouts using the continuous smoothClockMinutes decimal values
+function advanceSimulation() {
+    activeVessels.forEach(vessel => {
+        if (!vessel.track || vessel.track.length === 0) return;
+
+        // 1. Convert vessel start/end timeline text markers into raw numbers
+        const trackStartMin = timeToMinutes(simulationStartTime);
+        
+        // 2. Map current sub-minute timeline context into track coordinates
+        // Assuming your tracks are saved sequentially at fixed minute intervals or have timestamps:
+        let targetIndex = 0;
+        
+        // Find where the ship belongs right now on the track timeline
+        for (let i = 0; i < vessel.track.length; i++) {
+            // Adjust this if your track array points have explicit '.time' parameters
+            const pointTime = trackStartMin + i; 
+            if (pointTime <= smoothClockMinutes) {
+                targetIndex = i;
+            } else {
+                break;
+            }
+        }
+
+        const currentPoint = vessel.track[targetIndex];
+        const nextPoint = vessel.track[targetIndex + 1] || currentPoint;
+
+        if (currentPoint && nextPoint) {
+            // Calculate progress ratio between current minute index and next minute index
+            const pointTime = trackStartMin + targetIndex;
+            const ratio = Math.max(0, Math.min(1, smoothClockMinutes - pointTime));
+            
+            // Get intermediate high-precision lat/lng values
+            const smoothPos = interpolatePosition(currentPoint, nextPoint, ratio);
+            
+            // Calculate rolling dynamic heading angle
+            let currentHeading = vessel.heading || 0;
+            if (currentPoint !== nextPoint) {
+                currentHeading = Math.atan2(nextPoint.lng - currentPoint.lng, nextPoint.lat - currentPoint.lat) * 180 / Math.PI;
+            }
+
+            // Reposition the Leaflet vector layer
+            vessel.ship.setLatLngs(getShipShape(smoothPos.lat, smoothPos.lng, currentHeading));
+            vessel.currentIndex = targetIndex;
+        }
+    });
+}
+
 // MODIFIED: High-precision frame loop that decouples position recalculations from the 1-second text clock interval
 function runSmoothSimulationLoop(timestamp) {
     if (!simulationRunning) {
@@ -1888,26 +1943,29 @@ function runSmoothSimulationLoop(timestamp) {
         lastFrameTimestamp = timestamp;
     }
 
-    // 1. Calculate how many milliseconds have elapsed since the last screen refresh frame
+    // Calculate how many milliseconds have elapsed since the last screen refresh frame
     const deltaMs = timestamp - lastFrameTimestamp;
     lastFrameTimestamp = timestamp;
 
-    // 2. Convert millisecond delta gaps into simulation minutes based on selected play speed multipliers
+    // Convert millisecond delta gaps into simulation minutes based on selected play speed multipliers
     const minutesDelta = (deltaMs / 60000) * parseInt(replaySpeed, 10);
     smoothClockMinutes += minutesDelta;
 
-    // 3. Keep the text-based UI string clock roughly synced with our high-precision smooth time
+    // Keep the text-based UI string clock roughly synced with our high-precision smooth time
     const hours = Math.floor(smoothClockMinutes / 60);
     const minutes = Math.floor(smoothClockMinutes % 60);
     simulationTime = String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
 
-    // FIXED: Render the clock on EVERY frame refresh instead of stalling inside a separate interval loop
-    document.getElementById("simClock").textContent = simulationTime;
+    // Render the clock on EVERY frame refresh instead of stalling inside a separate interval loop
+    const clockEl = document.getElementById("simClock");
+    if (clockEl) {
+        clockEl.textContent = simulationTime;
+    }
 
-    // 4. Fire the existing vessel track position recalculation script
+    // Fire the newly fixed position recalculation script
     advanceSimulation();
 
-    // 5. Check boundary cutoff ceilings
+    // Check boundary cutoff ceilings
     if (smoothClockMinutes > timeToMinutes(simulationEndTime)) {
         simulationRunning = false;
         lastFrameTimestamp = null;
@@ -1924,12 +1982,13 @@ document.getElementById("playReplay").addEventListener("click", () => {
 
     smoothClockMinutes = timeToMinutes(simulationTime);
     simulationRunning = true;
-    lastFrameTimestamp = null; // Wipe baseline clean to prevent timestamp spikes upon resume
+    lastFrameTimestamp = null; 
 
-    // OPTIMIZED: Synchronously update the DOM text node immediately upon hitting play
-    document.getElementById("simClock").textContent = simulationTime;
+    const clockEl = document.getElementById("simClock");
+    if (clockEl) {
+        clockEl.textContent = simulationTime;
+    }
 
-    // Boot up the real-time high-precision frame loop
     requestAnimationFrame(runSmoothSimulationLoop);
 });
 
@@ -1965,13 +2024,17 @@ document.getElementById("resetReplay").addEventListener("click", () => {
 
     simulationTime = simulationStartTime;
     smoothClockMinutes = timeToMinutes(simulationStartTime);
-    document.getElementById("simClock").textContent = simulationTime;
+    
+    const clockEl = document.getElementById("simClock");
+    if (clockEl) {
+        clockEl.textContent = simulationTime;
+    }
 
     replaySpeed = 1;
     highlightSpeedButton("speed1");
 });
 
-// 5. Speed Controls (Ensure speed changes inject instantly into the frame calculation loop)
+// 5. Speed Controls
 document.getElementById("speed1").addEventListener("click", () => {
     replaySpeed = 1;
     highlightSpeedButton("speed1");
@@ -2003,6 +2066,7 @@ window.requestAnimationFrame(() => {
         }
     }, 50);
 });
+
 
 
     const failures = [];
