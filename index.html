@@ -1932,7 +1932,7 @@ function advanceSimulation() {
     });
 }
 
-// MODIFIED: High-precision frame loop that converts float minutes into HH:MM:SS format
+// MODIFIED: Restores the original layout string format
 function runSmoothSimulationLoop(timestamp) {
     if (!simulationRunning) {
         lastFrameTimestamp = null;
@@ -1951,19 +1951,14 @@ function runSmoothSimulationLoop(timestamp) {
     const minutesDelta = (deltaMs / 60000) * parseInt(replaySpeed, 10);
     smoothClockMinutes += minutesDelta;
 
-    // 3. FIXED: Extract Hours, Minutes, AND Seconds out of the decimal tracker float
-    const totalSeconds = Math.floor(smoothClockMinutes * 60);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    // 3. FIXED: Calculate exact fields but cleanly hide seconds from the main text string
+    const hours = Math.floor(smoothClockMinutes / 60);
+    const minutes = Math.floor(smoothClockMinutes % 60);
 
-    // Build an instantaneous high-precision HH:MM:SS timestamp string
-    simulationTime = 
-        String(hours).padStart(2, "0") + ":" + 
-        String(minutes).padStart(2, "0") + ":" + 
-        String(seconds).padStart(2, "0");
+    // RESTORED: Clean format matching your layout parameters
+    simulationTime = String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
 
-    // 4. Instantly render the live clock text string directly to your interface component
+    // 4. Update the live interface text node element
     const clockEl = document.getElementById("simClock");
     if (clockEl) {
         clockEl.textContent = simulationTime;
@@ -1972,7 +1967,7 @@ function runSmoothSimulationLoop(timestamp) {
     // 5. Fire your ship tracking layout adjustments
     advanceSimulation();
 
-    // 6. Check boundary cutoff ceilings
+    // 6. Check boundary cutoff ceilings cleanly
     if (smoothClockMinutes > timeToMinutes(simulationEndTime)) {
         simulationRunning = false;
         lastFrameTimestamp = null;
@@ -1982,6 +1977,7 @@ function runSmoothSimulationLoop(timestamp) {
     // Queue up the next refresh frame loop callback hook
     requestAnimationFrame(runSmoothSimulationLoop);
 }
+
 
 
 // 2. Play Button
