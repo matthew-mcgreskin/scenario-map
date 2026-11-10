@@ -1984,9 +1984,13 @@ function runSmoothSimulationLoop(timestamp) {
 document.getElementById("playReplay").addEventListener("click", () => {
     if (simulationRunning) return;
 
-    smoothClockMinutes = timeToMinutes(simulationTime);
+    // FIXED: Only read from the text layout string if smoothClockMinutes hasn't started counting yet
+    if (!smoothClockMinutes || smoothClockMinutes === 0) {
+        smoothClockMinutes = timeToMinutes(simulationTime);
+    }
+    
     simulationRunning = true;
-    lastFrameTimestamp = null; 
+    lastFrameTimestamp = null; // Prevent massive timestamp leaps upon unpausing
 
     const clockEl = document.getElementById("simClock");
     if (clockEl) {
@@ -2027,7 +2031,9 @@ document.getElementById("resetReplay").addEventListener("click", () => {
     });
 
     simulationTime = simulationStartTime;
-    smoothClockMinutes = timeToMinutes(simulationStartTime);
+    
+    // FIXED: Force a clean baseline reset so the Play Button knows it needs to reload the start parameters
+    smoothClockMinutes = 0; 
     
     const clockEl = document.getElementById("simClock");
     if (clockEl) {
@@ -2038,21 +2044,6 @@ document.getElementById("resetReplay").addEventListener("click", () => {
     highlightSpeedButton("speed1");
 });
 
-// 5. Speed Controls
-document.getElementById("speed1").addEventListener("click", () => {
-    replaySpeed = 1;
-    highlightSpeedButton("speed1");
-});
-
-document.getElementById("speed2").addEventListener("click", () => {
-    replaySpeed = 2;
-    highlightSpeedButton("speed2");
-});
-
-document.getElementById("speed4").addEventListener("click", () => {
-    replaySpeed = 4;
-    highlightSpeedButton("speed4");
-});
 
 // 6. URL Parameter Check Loop (Keep exactly as it was)
 window.requestAnimationFrame(() => {
