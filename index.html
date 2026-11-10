@@ -1854,7 +1854,14 @@ Promise.all([
     renderList();
 
 
-// 1. Declare the clock interval and animation tracking variable globally
+// ==========================================
+// GLOBALS CHECK: Make sure these exist cleanly above this code:
+// let simulationRunning = false;
+// let replaySpeed = 1; 
+// let smoothClockMinutes = 0;
+// let simulationTime = simulationStartTime;
+// ==========================================
+
 let clockIntervalId = null;
 let lastFrameTimestamp = null; 
 
@@ -1877,62 +1884,7 @@ function highlightSpeedButton(activeId) {
     }
 }
 
-// MODIFIED: Linear interpolation function to find coordinates between track segments
-function interpolatePosition(p1, p2, ratio) {
-    return {
-        lat: p1.lat + (p2.lat - p1.lat) * ratio,
-        lng: p1.lng + (p2.lng - p1.lng) * ratio
-    };
-}
-
-// FIXED: Smoothly updates ship layouts using the continuous smoothClockMinutes decimal values
-function advanceSimulation() {
-    activeVessels.forEach(vessel => {
-        if (!vessel.track || vessel.track.length === 0) return;
-
-        // 1. Convert vessel start/end timeline text markers into raw numbers
-        const trackStartMin = timeToMinutes(simulationStartTime);
-        
-        // 2. Map current sub-minute timeline context into track coordinates
-        // Assuming your tracks are saved sequentially at fixed minute intervals or have timestamps:
-        let targetIndex = 0;
-        
-        // Find where the ship belongs right now on the track timeline
-        for (let i = 0; i < vessel.track.length; i++) {
-            // Adjust this if your track array points have explicit '.time' parameters
-            const pointTime = trackStartMin + i; 
-            if (pointTime <= smoothClockMinutes) {
-                targetIndex = i;
-            } else {
-                break;
-            }
-        }
-
-        const currentPoint = vessel.track[targetIndex];
-        const nextPoint = vessel.track[targetIndex + 1] || currentPoint;
-
-        if (currentPoint && nextPoint) {
-            // Calculate progress ratio between current minute index and next minute index
-            const pointTime = trackStartMin + targetIndex;
-            const ratio = Math.max(0, Math.min(1, smoothClockMinutes - pointTime));
-            
-            // Get intermediate high-precision lat/lng values
-            const smoothPos = interpolatePosition(currentPoint, nextPoint, ratio);
-            
-            // Calculate rolling dynamic heading angle
-            let currentHeading = vessel.heading || 0;
-            if (currentPoint !== nextPoint) {
-                currentHeading = Math.atan2(nextPoint.lng - currentPoint.lng, nextPoint.lat - currentPoint.lat) * 180 / Math.PI;
-            }
-
-            // Reposition the Leaflet vector layer
-            vessel.ship.setLatLngs(getShipShape(smoothPos.lat, smoothPos.lng, currentHeading));
-            vessel.currentIndex = targetIndex;
-        }
-    });
-}
-
-// MODIFIED: Accelerates clock string changes based on active playback speed multipliers
+// High-precision frame loop
 function runSmoothSimulationLoop(timestamp) {
     if (!simulationRunning) {
         lastFrameTimestamp = null;
@@ -1943,29 +1895,27 @@ function runSmoothSimulationLoop(timestamp) {
         lastFrameTimestamp = timestamp;
     }
 
-    // 1. Calculate elapsed millisecond frame gaps
+    // 1. Calculate how many milliseconds have elapsed since the last frame
     const deltaMs = timestamp - lastFrameTimestamp;
     lastFrameTimestamp = timestamp;
 
-    // 2. Convert real milliseconds into running simulation minutes
-    // (At 1x speed, 1 real minute = 1 sim minute. At 4x speed, 1 real minute = 4 sim minutes)
-    const minutesDelta = (deltaMs / 60000) * parseInt(replaySpeed, 10);
+    // 2. FIXED: Use the primitive number directly instead of wrapping it in parseInt()
+    const minutesDelta = (deltaMs / 60000) * replaySpeed;
     smoothClockMinutes += minutesDelta;
 
-    // 3. FIXED: Extract fields using floor to match HH:MM structure cleanly
+    // 3. Extract exact integer components out of the continuous float timeline
     const hours = Math.floor(smoothClockMinutes / 60);
     const minutes = Math.floor(smoothClockMinutes % 60);
 
-    // Keep layout in strict compliance with your original parser requirements
+    // 4. Regenerate and display the layout clock string string parameters
     simulationTime = String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
 
-    // 4. Update the live interface text node element
     const clockEl = document.getElementById("simClock");
     if (clockEl) {
         clockEl.textContent = simulationTime;
     }
 
-    // 5. Fire your ship tracking layout adjustments
+    // 5. Fire the dynamic ship tracking map recalculations
     advanceSimulation();
 
     // 6. Check boundary cutoff ceilings cleanly
@@ -1975,22 +1925,21 @@ function runSmoothSimulationLoop(timestamp) {
         return;
     }
 
-    // Queue up the next refresh frame loop callback hook
+    // Continue the animation frame loop recursion loop hook
     requestAnimationFrame(runSmoothSimulationLoop);
 }
-
 
 // 2. Play Button
 document.getElementById("playReplay").addEventListener("click", () => {
     if (simulationRunning) return;
 
-    // FIXED: Only read from the text layout string if smoothClockMinutes hasn't started counting yet
-    if (!smoothClockMinutes || smoothClockMinutes === 0) {
+    // FIXED: Correctly parse simulation start timestamp baseline arrays markers safely
+    if (smoothClockMinutes === 0 || simulationTime === simulationStartTime) {
         smoothClockMinutes = timeToMinutes(simulationTime);
     }
     
     simulationRunning = true;
-    lastFrameTimestamp = null; // Prevent massive timestamp leaps upon unpausing
+    lastFrameTimestamp = null; 
 
     const clockEl = document.getElementById("simClock");
     if (clockEl) {
@@ -2030,10 +1979,9 @@ document.getElementById("resetReplay").addEventListener("click", () => {
         );
     });
 
+    // FIXED: Explicitly force full text values back to their defaults
     simulationTime = simulationStartTime;
-    
-    // FIXED: Force a clean baseline reset so the Play Button knows it needs to reload the start parameters
-    smoothClockMinutes = 0; 
+    smoothClockMinutes = timeToMinutes(simulationStartTime);
     
     const clockEl = document.getElementById("simClock");
     if (clockEl) {
@@ -2044,6 +1992,21 @@ document.getElementById("resetReplay").addEventListener("click", () => {
     highlightSpeedButton("speed1");
 });
 
+// 5. Speed Controls (Directly updates primitive integer type values)
+document.getElementById("speed1").addEventListener("click", () => {
+    replaySpeed = 1;
+    highlightSpeedButton("speed1");
+});
+
+document.getElementById("speed2").addEventListener("click", () => {
+    replaySpeed = 2;
+    highlightSpeedButton("speed2");
+});
+
+document.getElementById("speed4").addEventListener("click", () => {
+    replaySpeed = 4;
+    highlightSpeedButton("speed4");
+});
 
 // 6. URL Parameter Check Loop (Keep exactly as it was)
 window.requestAnimationFrame(() => {
