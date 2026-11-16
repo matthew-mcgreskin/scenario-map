@@ -504,6 +504,21 @@
     border: 1px solid rgba(255,255,255,0.15);
 }
 
+
+#replayControls button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+#replayControls button:hover {
+    border-color: #ffd700;
+}
+
+
 #simClock {
     color: white;
     font-family: "IBM Plex Mono", monospace;
@@ -666,31 +681,23 @@ function advanceClock() {
 
 
 
-vesselLayer.on("add", () => {
-
-   /*
-    simulationRunning = true;
-   */
-
-
-document.getElementById("replayControls").style.display = "flex";
-
-
+vesselLayer.on("add", async () => {
+    document.getElementById("replayControls").style.display = "flex";
 
     if (!vesselsLoaded) {
-        loadVessels();
-        vesselsLoaded = true;
+        const ok = await loadVessels();
+        if (ok) {
+            vesselsLoaded = true;
+            isInitialized = false;
+        }
     }
-
 });
 
 vesselLayer.on("remove", () => {
-
     simulationRunning = false;
-
     document.getElementById("replayControls").style.display = "none";
-
 });
+
 
 
 
@@ -1333,7 +1340,7 @@ function advanceSimulation() {
 
     // Request the browser to execute this function on the very next screen refresh frame
     if (simulationRunning) {
-        requestAnimationFrame(advanceSimulation);
+        
     }
 }
 
@@ -1899,8 +1906,8 @@ function runSmoothSimulationLoop(timestamp) {
     const deltaMs = timestamp - lastFrameTimestamp;
     lastFrameTimestamp = timestamp;
 
-    // 2. Convert millisecond delta gaps into simulation minutes based on selected play speed multipliers
-    const minutesDelta = (deltaMs / 60000) * replaySpeed;
+    // 2. Convert millisecond delta gaps into simulation minutes (1 sim min per real sec at x1)
+    const minutesDelta = (deltaMs / 1000) * replaySpeed;
     smoothClockMinutes += minutesDelta;
 
     // 3. Extract exact integer components out of the continuous float timeline
@@ -1925,9 +1932,10 @@ function runSmoothSimulationLoop(timestamp) {
         return;
     }
 
-    // Continue the animation frame loop recursion loop hook
+    // Continue the animation frame loop
     requestAnimationFrame(runSmoothSimulationLoop);
 }
+
 
 // 2. Play Button
 document.getElementById("playReplay").addEventListener("click", () => {
