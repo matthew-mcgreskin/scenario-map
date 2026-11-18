@@ -504,6 +504,17 @@
     border: 1px solid rgba(255,255,255,0.15);
 }
 
+#replayControls {
+    align-items: center; /* Keeps slider vertically centred with buttons */
+}
+
+#timeSlider {
+    width: 140px;
+    accent-color: #f5ae05;
+    cursor: pointer;
+}
+
+
 
 #replayControls button {
     background: rgba(255,255,255,0.08);
@@ -562,7 +573,7 @@
 
     <button id="speed2">×2</button>
 
-    <button id="speed4">×4</button>
+    <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" />
 
     <span id="simClock">00:00</span>
 
@@ -1171,6 +1182,18 @@ simulationStartTime = earliestTime;
 simulationTime = earliestTime;
 simulationEndTime = latestTime;
 
+
+// ---> PASTE THE NEW SLIDER CODE RIGHT HERE <---
+const slider = document.getElementById("timeSlider");
+if (slider) {
+    const startMins = timeToMinutes(earliestTime);
+    slider.min = startMins;
+    slider.max = timeToMinutes(latestTime);
+    slider.value = startMins;
+}
+// ----------------------------------------------
+
+
 	console.log(
     "Earliest time:",
     earliestTime
@@ -1247,6 +1270,8 @@ L.polyline(trackPoints, {
 
 
         });
+	
+	return true; 
 
     } catch (err) {
         console.error("Unable to load vessel feed", err);
@@ -1263,10 +1288,10 @@ L.polyline(trackPoints, {
 
 
 
-function advanceSimulation() {
+function advanceSimulation(forceUpdate = false) {
 
-	 // FIX: Instantly kill the animation loop if simulation is paused or reset
-    if (!simulationRunning) return;
+	 // FIX: Allow manual slider scrubbing even when paused
+    if (!simulationRunning && !forceUpdate) return;
 
     // Uses the high-precision smoothClockMinutes instead of the truncated string clock
     const clockMinutes = smoothClockMinutes;
@@ -1922,6 +1947,13 @@ function runSmoothSimulationLoop(timestamp) {
         clockEl.textContent = simulationTime;
     }
 
+
+	  const slider = document.getElementById("timeSlider");
+    if (slider) {
+        slider.value = smoothClockMinutes;
+    }
+
+
     // 5. Fire the dynamic ship tracking map recalculations
     advanceSimulation();
 
@@ -1968,8 +2000,9 @@ document.getElementById("pauseReplay").addEventListener("click", () => {
 document.getElementById("resetReplay").addEventListener("click", () => {
     simulationRunning = false;
     lastFrameTimestamp = null;
-    isInitialized = false; // FIXED: Allow the timeline to load from the start again next time play is pressed
+    isInitialized = false;
 
+    // Loop: resets each individual ship
     activeVessels.forEach(vessel => {
         if (!vessel.track || vessel.track.length === 0) return;
 
@@ -1989,6 +2022,26 @@ document.getElementById("resetReplay").addEventListener("click", () => {
         );
     });
 
+    // Still inside the Reset button, right after the loop finishes:
+    simulationTime = simulationStartTime;
+    smoothClockMinutes = timeToMinutes(simulationStartTime);
+
+    const clockEl = document.getElementById("simClock");
+    if (clockEl) {
+        clockEl.textContent = simulationTime;
+    }
+
+    replaySpeed = 1;
+    highlightSpeedButton("speed1");
+
+    const slider = document.getElementById("timeSlider");
+    if (slider) {
+        slider.value = slider.min;
+    }
+});
+
+	/*
+
     // Explicitly force full text values back to their defaults
     simulationTime = simulationStartTime;
     smoothClockMinutes = timeToMinutes(simulationStartTime);
@@ -2001,6 +2054,9 @@ document.getElementById("resetReplay").addEventListener("click", () => {
     replaySpeed = 1;
     highlightSpeedButton("speed1");
 });
+
+	*/
+
 
 // 5. Speed Controls (Directly updates primitive integer type values)
 document.getElementById("speed1").addEventListener("click", () => {
@@ -2017,6 +2073,26 @@ document.getElementById("speed4").addEventListener("click", () => {
     replaySpeed = 4;
     highlightSpeedButton("speed4");
 });
+
+
+// Paste the drag listener right here:
+document.getElementById("timeSlider").addEventListener("input", (e) => {
+    isInitialized = true;
+    smoothClockMinutes = parseFloat(e.target.value);
+
+    const hours = Math.floor(smoothClockMinutes / 60);
+    const minutes = Math.floor(smoothClockMinutes % 60);
+    simulationTime = String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
+
+    const clockEl = document.getElementById("simClock");
+    if (clockEl) {
+        clockEl.textContent = simulationTime;
+    }
+
+    advanceSimulation(true);
+});
+
+
 
 // 6. URL Parameter Check Loop (Keep exactly as it was)
 window.requestAnimationFrame(() => {
