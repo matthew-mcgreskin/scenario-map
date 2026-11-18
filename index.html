@@ -1237,11 +1237,12 @@ Math.atan2(
     point.lng
 ]);
 
-L.polyline(trackPoints, {
-    color: vessel.colour,
-    weight: 3,
-    opacity: 0.7
-}).addTo(vesselLayer);	
+const trackLine = L.polyline([], {
+    color: vessel.colour || "#90EE90",
+    weight: 2,
+    dashArray: "5, 5",
+    opacity: 0.8
+}).addTo(vesselLayer);
 
 
             const ship = L.polygon(
@@ -1265,11 +1266,12 @@ L.polyline(trackPoints, {
 
 
 
-	activeVessels.push({
+activeVessels.push({
     ship: ship,
+    trackLine: trackLine, // <-- ADD THIS LINE
     track: vessel.track,
     currentIndex: 0,
-	progress: 0
+    progress: 0
 });	
 
 
@@ -1318,6 +1320,7 @@ function advanceSimulation(forceUpdate = false) {
             const nextPoint = vessel.track[1] || firstPoint;
             const heading = Math.atan2(nextPoint.lng - firstPoint.lng, nextPoint.lat - firstPoint.lat) * 180 / Math.PI;
             if (vessel.ship) vessel.ship.setLatLngs(getShipShape(firstPoint.lat, firstPoint.lng, heading));
+	if (vessel.trackLine) vessel.trackLine.setLatLngs([]);
             return; 
         }
 
@@ -1330,6 +1333,8 @@ function advanceSimulation(forceUpdate = false) {
                 vessel.ship.setLatLngs(getShipShape(lastPoint.lat, lastPoint.lng, heading));
                 vessel.ship.bringToFront();
             }
+	if (vessel.trackLine) vessel.trackLine.setLatLngs(vessel.track.map(p => [p.lat, p.lng]));
+
             return; 
         }
 
@@ -1365,6 +1370,15 @@ function advanceSimulation(forceUpdate = false) {
             vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
             vessel.ship.bringToFront();
         }
+
+
+	if (vessel.trackLine) {
+    const pastPoints = vessel.track
+        .slice(0, matchedIndex + 1)
+        .map(p => [p.lat, p.lng]);
+    pastPoints.push([lat, lng]);
+    vessel.trackLine.setLatLngs(pastPoints);
+}
     });
 
     // Request the browser to execute this function on the very next screen refresh frame
