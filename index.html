@@ -573,6 +573,8 @@
 
     <button id="speed2">×2</button>
 
+    <button id="speed4">×4</button>
+
     <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" />
 
     <span id="simClock">00:00</span>
@@ -1371,26 +1373,6 @@ function advanceSimulation(forceUpdate = false) {
 
 
 
-
-
-
-
-
-
-
-/*
-   if (vessel.progress >= 1) {
-
-            vessel.progress = 0;
-            vessel.currentIndex++;
-
-        }
-*/
-
-   
-
-
-
 async function loadEvents() {
   try {
     const response = await fetch(EVENTS_FEED_URL);
@@ -1897,6 +1879,10 @@ let clockIntervalId = null;
 let lastFrameTimestamp = null; 
 let isInitialized = false; // FIXED: Explicit flag prevents the start time from reset-looping
 
+
+let isInitialized = false;
+let isScrubbing = false;
+
 // Helper function to turn off all highlights and highlight the clicked button
 function highlightSpeedButton(activeId) {
     ["speed1", "speed2", "speed4"].forEach(id => {
@@ -1948,8 +1934,8 @@ function runSmoothSimulationLoop(timestamp) {
     }
 
 
-	  const slider = document.getElementById("timeSlider");
-    if (slider) {
+	const slider = document.getElementById("timeSlider");
+    if (slider && !isScrubbing) {
         slider.value = smoothClockMinutes;
     }
 
@@ -1968,25 +1954,18 @@ function runSmoothSimulationLoop(timestamp) {
     requestAnimationFrame(runSmoothSimulationLoop);
 }
 
-
-// 2. Play Button
+//playbutton
 document.getElementById("playReplay").addEventListener("click", () => {
     if (simulationRunning) return;
 
-    // FIXED: Use the boolean flag to parse the start parameters exactly once
+    // Only set to start time on the very first play, NEVER after scrubbing
     if (!isInitialized) {
         smoothClockMinutes = timeToMinutes(simulationStartTime);
         isInitialized = true;
     }
-    
+
     simulationRunning = true;
-    lastFrameTimestamp = null; 
-
-    const clockEl = document.getElementById("simClock");
-    if (clockEl) {
-        clockEl.textContent = simulationTime;
-    }
-
+    lastFrameTimestamp = null;
     requestAnimationFrame(runSmoothSimulationLoop);
 });
 
@@ -2072,6 +2051,22 @@ document.getElementById("speed2").addEventListener("click", () => {
 document.getElementById("speed4").addEventListener("click", () => {
     replaySpeed = 4;
     highlightSpeedButton("speed4");
+});
+
+
+
+
+const timeSliderEl = document.getElementById("timeSlider");
+
+timeSliderEl.addEventListener("pointerdown", () => {
+    isScrubbing = true;
+});
+
+window.addEventListener("pointerup", () => {
+    if (isScrubbing) {
+        isScrubbing = false;
+        lastFrameTimestamp = null; // Prevents a sudden time jump when letting go
+    }
 });
 
 
