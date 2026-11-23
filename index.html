@@ -2004,6 +2004,11 @@ document.getElementById("resetReplay").addEventListener("click", () => {
         vessel.currentIndex = 0;
         vessel.progress = 0;
 
+        // Clear the dotted track line
+        if (vessel.trackLine) {
+            vessel.trackLine.setLatLngs([]);
+        }
+
         const startPoint = vessel.track[0];
         const nextPoint = vessel.track[1] || startPoint;
         const initialHeading = Math.atan2(nextPoint.lng - startPoint.lng, nextPoint.lat - startPoint.lat) * 180 / Math.PI;
