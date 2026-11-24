@@ -189,8 +189,15 @@
 }
 
 @media (min-width: 769px) {
+  .list-panel {
+    transition: transform 0.25s ease, max-height 0.25s ease;
+  }
   .list-panel.collapsed {
-    transform: translateX(calc(-100% + 46px));
+    transform: translateX(calc(-100% + 38px));
+    max-height: 46px;
+  }
+  .list-panel-head {
+    padding: 10px 6px 8px 16px;
   }
   .list-panel.collapsed .port-list,
   .list-panel.collapsed h3 {
