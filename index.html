@@ -485,75 +485,65 @@
       box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     }
 
+    /* Prevent menu clipping & reserve safe header space for absolute floating cross button */
+    .leaflet-control-layers-expanded {
+      position: relative !important;
+      max-width: calc(100vw - 32px) !important;
+      max-height: 50vh !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+      margin-right: 12px !important;
+      margin-bottom: 12px !important;
+      padding-top: 38px !important; 
+      border-radius: 12px !important;
+    }
 
-  /* Prevent menu clipping & reserve safe header space for absolute floating cross button */
-  .leaflet-control-layers-expanded {
-    position: relative !important;
-    max-width: calc(100vw - 32px) !important;
-    max-height: 50vh !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    margin-right: 12px !important;
-    margin-bottom: 12px !important;
-    padding-top: 38px !important; 
-    border-radius: 12px !important;
+    /* Dedicated Touch Close Control Styling */
+    .mobile-layer-close {
+      display: none;
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      z-index: 7000;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--foam);
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 1;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Only reveal the close button when the Leaflet layers panel is explicitly expanded */
+    .leaflet-control-layers-expanded .mobile-layer-close {
+      display: flex;
+    }
+
+    .panel-body, .port-list {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 14px 16px 24px;
+    }
   }
-
-
-  /* Dedicated Touch Close Control Styling */
-  .mobile-layer-close {
-    display: none; /* Hide by default so it never blocks the small circle button */
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    z-index: 7000;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--foam);
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 1;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  /* Only reveal the close button when the Leaflet layers panel is explicitly expanded */
-  .leaflet-control-layers-expanded .mobile-layer-close {
-    display: flex;
-  }
-
-
-  .panel-body, .port-list {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 14px 16px 24px;
-  }
-}
 
 
 #replayControls {
     position: fixed;
     top: 80px;
     right: 20px;
-
     z-index: 99999;
-
     background: #122233;
     padding: 8px;
     border-radius: 8px;
-
     display: flex;
+    align-items: center;
     gap: 8px;
-
     border: 1px solid rgba(255,255,255,0.15);
-}
-
-#replayControls {
-    align-items: center; /* Keeps slider vertically centred with buttons */
 }
 
 #timeSlider {
@@ -561,8 +551,6 @@
     accent-color: #f5ae05;
     cursor: pointer;
 }
-
-
 
 #replayControls button {
     background: rgba(255,255,255,0.08);
@@ -577,7 +565,6 @@
     border-color: #ffd700;
 }
 
-
 #simClock {
     color: white;
     font-family: "IBM Plex Mono", monospace;
@@ -586,8 +573,36 @@
     padding: 4px 6px;
 }
 
+/* ==========================================================================
+   6. MOBILE OVERRIDE FOR REPLAY CONTROLS
+   ========================================================================== */
+@media (max-width: 768px) {
+    #replayControls {
+        top: auto;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        left: 12px;
+        right: 64px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 10px;
+        z-index: 9000;
+    }
+
+    #replayControls button {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+
+    #timeSlider {
+        flex: 1 1 100%;
+        width: 100%;
+        order: -1;
+    }
+}
 
 </style>
+
 
 </head>
 <body>
