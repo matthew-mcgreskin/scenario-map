@@ -757,6 +757,19 @@ function timeToMinutes(timeString) {
 
 }
 
+const coordsLayer = L.layerGroup();
+let showCursorCoords = false; // Set to true if you want it on by default
+
+coordsLayer.on("add", () => {
+    showCursorCoords = true;
+});
+
+coordsLayer.on("remove", () => {
+    showCursorCoords = false;
+    document.getElementById("cursorCoords").style.display = "none";
+});
+
+
 
 
 
@@ -1072,9 +1085,15 @@ const overlaysTree = {
     label: "Layers",
     children: [
         {
-            label: "OpenSeaMap marks",
-            layer: seaMarks
+            label: "Data Layers",
+            layer: OpenSeaMap marks
         },
+
+	 {
+            label: "Cursor Coordinates",
+            layer: coordsLayer
+        },
+
         {
             label: "<strong>NatureScot Data</strong>",
             selectAllCheckbox: true,
@@ -1848,7 +1867,8 @@ document.getElementById("reset").addEventListener("click", () => {
       mpa, spa, sac, ramsar, sssi,
       mca, gcr, lnr, nnr,
       sepaPoints, sepaPolygons,
-      sepaZones, sepaSignage
+      sepaZones, sepaSignage,
+      coordsLayer
     ].forEach(layer => {
         if (map.hasLayer(layer)) {
             map.removeLayer(layer);
@@ -2277,6 +2297,8 @@ map.on("click", function (e) {
 const cursorCoords = document.getElementById("cursorCoords");
 
 map.on("mousemove", (e) => {
+    if (!showCursorCoords) return;
+
     const { lat, lng } = e.latlng;
     const { clientX, clientY } = e.originalEvent;
 
@@ -2289,6 +2311,13 @@ map.on("mousemove", (e) => {
 map.on("mouseout", () => {
     cursorCoords.style.display = "none";
 });
+
+document.addEventListener("mousemove", (e) => {
+    if (!e.target.closest("#map")) {
+        cursorCoords.style.display = "none";
+    }
+});
+
 
 
   </script>
