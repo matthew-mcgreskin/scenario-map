@@ -376,6 +376,32 @@
   }
   .leaflet-tooltip.pin-label::before { display: none; }
 
+
+
+  #cursorCoords {
+    position: fixed;
+    pointer-events: none;
+    z-index: 8000;
+    background: rgba(11, 28, 44, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: var(--gold);
+    font: 500 11px "IBM Plex Mono", monospace;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    display: none;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  @media (hover: none), (max-width: 768px) {
+    #cursorCoords {
+      display: none !important;
+    }
+  }
+
+
+
   /* ==========================================================================
      5. RESPONSIVE MOBILE OVERRIDES (STRICT MEDIA QUERY ROOT)
      ========================================================================== */
@@ -607,6 +633,7 @@
 </head>
 <body>
   <div id="map"></div>
+<div id="cursorCoords"></div>
   <header>
     <div class="brand">
       <h1>Firth of Forth</h1>
@@ -2242,6 +2269,27 @@ map.on("click", function (e) {
         document.getElementById("listPanel").classList.remove("mobile-open");
     }
 });
+
+
+
+
+
+const cursorCoords = document.getElementById("cursorCoords");
+
+map.on("mousemove", (e) => {
+    const { lat, lng } = e.latlng;
+    const { clientX, clientY } = e.originalEvent;
+
+    cursorCoords.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    cursorCoords.style.left = `${clientX + 14}px`;
+    cursorCoords.style.top = `${clientY + 14}px`;
+    cursorCoords.style.display = "block";
+});
+
+map.on("mouseout", () => {
+    cursorCoords.style.display = "none";
+});
+
 
   </script>
 </body>
