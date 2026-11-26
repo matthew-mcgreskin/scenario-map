@@ -1910,15 +1910,11 @@ document.getElementById("mobileList")
 
 	
 const shipHullTemplate = [
-    [0.0025, 0],          // Bow
-
-    [0.0015, 0.0006],
-
-    [-0.0045, 0.0008],
-
-    [-0.0045, -0.0008],
-
-    [0.0015, -0.0006]
+    [0.00045, 0],         // Bow
+    [0.00025, 0.00009],   // Starboard shoulder
+    [-0.00055, 0.00009],  // Starboard stern
+    [-0.00055, -0.00009], // Port stern
+    [0.00025, -0.00009]   // Port shoulder
 ];
 
 function getBearing(lat1, lng1, lat2, lng2) {
