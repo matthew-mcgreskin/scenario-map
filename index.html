@@ -1288,11 +1288,8 @@ document.getElementById("simClock").textContent =
 const nextPoint =
     vessel.track[1] || vessel.track[0];
 
-const heading =
-Math.atan2(
-    nextPoint.lng - currentPoint.lng,
-    nextPoint.lat - currentPoint.lat
-) * 180 / Math.PI;
+const heading = getBearing(currentPoint.lat, currentPoint.lng, nextPoint.lat, nextPoint.lng);
+
 	
 
 
@@ -1384,7 +1381,8 @@ function advanceSimulation(forceUpdate = false) {
         if (clockMinutes < totalStartMinutes) {
             const firstPoint = vessel.track[0];
             const nextPoint = vessel.track[1] || firstPoint;
-            const heading = Math.atan2(nextPoint.lng - firstPoint.lng, nextPoint.lat - firstPoint.lat) * 180 / Math.PI;
+            const heading = getBearing(firstPoint.lat, firstPoint.lng, nextPoint.lat, nextPoint.lng);
+
             if (vessel.ship) vessel.ship.setLatLngs(getShipShape(firstPoint.lat, firstPoint.lng, heading));
 	if (vessel.trackLine) vessel.trackLine.setLatLngs([]);
             return; 
@@ -1394,7 +1392,8 @@ function advanceSimulation(forceUpdate = false) {
         if (clockMinutes >= totalEndMinutes) {
             const lastPoint = vessel.track[totalPoints - 1];
             const prevPoint = vessel.track[totalPoints - 2] || lastPoint;
-            const heading = Math.atan2(lastPoint.lng - prevPoint.lng, lastPoint.lat - prevPoint.lat) * 180 / Math.PI;
+            const heading = getBearing(prevPoint.lat, prevPoint.lng, lastPoint.lat, lastPoint.lng);
+
             if (vessel.ship) {
                 vessel.ship.setLatLngs(getShipShape(lastPoint.lat, lastPoint.lng, heading));
                 vessel.ship.bringToFront();
@@ -1430,7 +1429,7 @@ function advanceSimulation(forceUpdate = false) {
         const lat = interpolate(currentPoint.lat, nextPoint.lat, vessel.progress);
         const lng = interpolate(currentPoint.lng, nextPoint.lng, vessel.progress);
 
-        const heading = Math.atan2(nextPoint.lng - currentPoint.lng, nextPoint.lat - currentPoint.lat) * 180 / Math.PI;
+        const heading = getBearing(currentPoint.lat, currentPoint.lng, nextPoint.lat, nextPoint.lng);
 
         if (vessel.ship) {
             vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
@@ -1922,12 +1921,18 @@ const shipHullTemplate = [
     [0.0015, -0.0006]
 ];
 
-function getShipShape(lat, lng, heading) {
+function getBearing(lat1, lng1, lat2, lng2) {
+    const latScale = Math.cos(lat1 * Math.PI / 180);
+    const dLat = lat2 - lat1;
+    const dLng = (lng2 - lng1) * latScale;
+    return Math.atan2(dLng, dLat) * 180 / Math.PI;
+}
 
+function getShipShape(lat, lng, heading) {
     const angle = heading * Math.PI / 180;
+    const latScale = Math.cos(lat * Math.PI / 180);
 
     return shipHullTemplate.map(([dLat, dLng]) => {
-
         const rotatedLat =
             dLat * Math.cos(angle) -
             dLng * Math.sin(angle);
@@ -1938,9 +1943,8 @@ function getShipShape(lat, lng, heading) {
 
         return [
             lat + rotatedLat,
-            lng + rotatedLng
+            lng + (rotatedLng / latScale)
         ];
-
     });
 }
 
@@ -2087,7 +2091,7 @@ document.getElementById("resetReplay").addEventListener("click", () => {
 
         const startPoint = vessel.track[0];
         const nextPoint = vessel.track[1] || startPoint;
-        const initialHeading = Math.atan2(nextPoint.lng - startPoint.lng, nextPoint.lat - startPoint.lat) * 180 / Math.PI;
+        const initialHeading = getBearing(startPoint.lat, startPoint.lng, nextPoint.lat, nextPoint.lng);
 
         vessel.ship.setLatLngs(
             getShipShape(
