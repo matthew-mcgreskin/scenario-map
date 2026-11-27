@@ -807,17 +807,22 @@ function advanceClock() {
 
 
 vesselLayer.on("add", async () => {
+    if (map.hasLayer(plannerLayer)) {
+        map.removeLayer(plannerLayer);
+    }
+
     document.getElementById("replayControls").style.display = "flex";
 
     if (!vesselsLoaded) {
         const ok = await loadVessels();
         if (ok) {
             vesselsLoaded = true;
-	    advanceSimulation(true);
+            advanceSimulation(true);
             isInitialized = false;
         }
     }
 });
+
 
 vesselLayer.on("remove", () => {
     simulationRunning = false;
@@ -857,9 +862,14 @@ function refreshPlannerTimes() {
 }
 
 plannerLayer.on("add", () => {
+    if (map.hasLayer(vesselLayer)) {
+        map.removeLayer(vesselLayer);
+    }
+
     document.getElementById("plannerControls").style.display = "flex";
     map.getContainer().style.cursor = "crosshair";
 });
+
 
 plannerLayer.on("remove", () => {
     document.getElementById("plannerControls").style.display = "none";
