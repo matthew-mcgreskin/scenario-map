@@ -663,6 +663,18 @@
     <span id="simClock">00:00</span>
 </div>
 
+
+
+<div id="plannerControls" style="display:none; position:fixed; top:80px; right:20px; z-index:99999; background:#122233; padding:10px 12px; border-radius:8px; align-items:center; gap:8px; border:1px solid rgba(255,255,255,0.15); flex-wrap:wrap;">
+    <span style="font-size:12px; color:#f5ae05; font-weight:600;">Start:</span>
+    <input type="time" id="plannerStartTime" value="08:00" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:6px; padding:4px 6px; font-family:'IBM Plex Mono', monospace;" />
+    <span id="plannerCount" style="font-size:12px; color:#8aa0b3; font-family:'IBM Plex Mono', monospace;">0 pts</span>
+    <button id="undoPlannerPoint" type="button" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; border-radius:6px; padding:5px 10px; cursor:pointer;">↩ Undo</button>
+    <button id="clearPlannerPoints" type="button" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; border-radius:6px; padding:5px 10px; cursor:pointer;">🗑 Clear</button>
+    <button id="copyTrackData" type="button" style="background:#2a9d8f; border:0; color:#fff; font-weight:600; border-radius:6px; padding:5px 12px; cursor:pointer;">📋 Copy Track Data</button>
+</div>
+
+
 	
 
   <div class="filters" id="filters">
@@ -813,6 +825,126 @@ vesselLayer.on("remove", () => {
 });
 
 
+// ==========================================
+// VOYAGE PLANNER LAYER (15-MIN INTERVALS)
+// ==========================================
+const plannerLayer = L.layerGroup();
+let plannerPoints = [];
+let plannerMarkers = [];
+const plannerPolyline = L.polyline([], {
+    color: "#2a9d8f",
+    weight: 3,
+    dashArray: "6, 6"
+}).addTo(plannerLayer);
+
+function addMinutesToTime(timeStr, minsToAdd) {
+    const total = timeToMinutes(timeStr) + minsToAdd;
+    const h = Math.floor((total / 60) % 24);
+    const m = Math.floor(total % 60);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function refreshPlannerTimes() {
+    const startVal = document.getElementById("plannerStartTime").value || "08:00";
+    plannerPoints.forEach((pt, idx) => {
+        pt.time = idx === 0 ? startVal : addMinutesToTime(plannerPoints[idx - 1].time, 15);
+        if (plannerMarkers[idx]) {
+            plannerMarkers[idx].setTooltipContent(`#${idx + 1} · ${pt.time}`);
+        }
+    });
+    plannerPolyline.setLatLngs(plannerPoints.map(p => [p.lat, p.lng]));
+    document.getElementById("plannerCount").textContent = `${plannerPoints.length} pts`;
+}
+
+plannerLayer.on("add", () => {
+    document.getElementById("plannerControls").style.display = "flex";
+    map.getContainer().style.cursor = "crosshair";
+});
+
+plannerLayer.on("remove", () => {
+    document.getElementById("plannerControls").style.display = "none";
+    map.getContainer().style.cursor = "";
+});
+
+// Click map to add a 15-min waypoint when Voyage Planner is active
+map.on("click", (e) => {
+    if (!map.hasLayer(plannerLayer)) return;
+
+    const startVal = document.getElementById("plannerStartTime").value || "08:00";
+    const idx = plannerPoints.length;
+    const time = idx === 0 ? startVal : addMinutesToTime(plannerPoints[idx - 1].time, 15);
+
+    const point = {
+        time: time,
+        lat: Number(e.latlng.lat.toFixed(4)),
+        lng: Number(e.latlng.lng.toFixed(4))
+    };
+
+    plannerPoints.push(point);
+
+    const marker = L.circleMarker([point.lat, point.lng], {
+        radius: 6,
+        color: "#ffffff",
+        fillColor: "#2a9d8f",
+        fillOpacity: 1,
+        weight: 2
+    })
+    .bindTooltip(`#${idx + 1} · ${point.time}`, {
+        permanent: true,
+        direction: "right",
+        offset: L.point(8, 0),
+        className: "pin-label"
+    })
+    .addTo(plannerLayer);
+
+    plannerMarkers.push(marker);
+    plannerPolyline.setLatLngs(plannerPoints.map(p => [p.lat, p.lng]));
+    document.getElementById("plannerCount").textContent = `${plannerPoints.length} pts`;
+});
+
+// Recalculate all timestamps if Start Time is changed
+document.getElementById("plannerStartTime").addEventListener("change", refreshPlannerTimes);
+
+// Undo last point
+document.getElementById("undoPlannerPoint").addEventListener("click", () => {
+    if (!plannerPoints.length) return;
+    plannerPoints.pop();
+    const lastMarker = plannerMarkers.pop();
+    if (lastMarker) plannerLayer.removeLayer(lastMarker);
+    refreshPlannerTimes();
+});
+
+// Clear all points
+document.getElementById("clearPlannerPoints").addEventListener("click", () => {
+    plannerPoints = [];
+    plannerMarkers.forEach(m => plannerLayer.removeLayer(m));
+    plannerMarkers = [];
+    plannerPolyline.setLatLngs([]);
+    document.getElementById("plannerCount").textContent = "0 pts";
+});
+
+// Copy exact JSON format for Microsoft Lists "Track Data" column
+document.getElementById("copyTrackData").addEventListener("click", (e) => {
+    if (!plannerPoints.length) return;
+
+    const formattedRows = plannerPoints.map(p =>
+        `{"time": "${p.time}", "lat": ${p.lat.toFixed(4)}, "lng": ${p.lng.toFixed(4)}}`
+    );
+    const output = `[\n${formattedRows.join(",\n")}\n]`;
+
+    navigator.clipboard.writeText(output).then(() => {
+        const btn = e.target;
+        const originalText = btn.textContent;
+        btn.textContent = "✓ Copied!";
+        btn.style.background = "#f5ae05";
+        btn.style.color = "#0d1b26";
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = "#2a9d8f";
+            btn.style.color = "#fff";
+        }, 2000);
+    });
+});
 
 
 
@@ -1124,6 +1256,19 @@ const overlaysTree = {
                 { label: "Vessel Replay", layer: vesselLayer }
             ]
         }
+
+
+
+{
+    label: "<strong>Vessel Tracking</strong>",
+    selectAllCheckbox: true,
+    children: [
+        { label: "Vessel Replay", layer: vesselLayer },
+        { label: "Voyage Planner", layer: plannerLayer }
+    ]
+}
+
+
 ]
 };
 
