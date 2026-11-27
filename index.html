@@ -1370,22 +1370,23 @@ const trackLine = L.polyline([], {
 .addTo(vesselLayer);
 
   if (showShipNames) {
-                ship.bindTooltip(vessel.name, { 
-                    permanent: true, 
-                    direction: "right", 
-                    offset:10,0
-                    className: "pin-label" 
-                });
-            }
-
+    ship.bindTooltip(vessel.name, { 
+        permanent: true, 
+        direction: "right", 
+        offset: L.point(10, 0),
+        className: "pin-label" 
+    });
+}
 
 activeVessels.push({
+    name: vessel.name,
     ship: ship,
-    trackLine: trackLine, // <-- ADD THIS LINE
+    trackLine: trackLine,
     track: vessel.track,
     currentIndex: 0,
     progress: 0
-});	
+});
+
 
 
         });
@@ -2205,21 +2206,19 @@ document.getElementById("speed4").addEventListener("click", () => {
 document.getElementById("toggleShipNames").addEventListener("click", (e) => {
     showShipNames = !showShipNames;
 
-    // Highlight button when active
     e.target.style.backgroundColor = showShipNames ? "#f5ae05" : "";
     e.target.style.color = showShipNames ? "#0d1b26" : "";
     e.target.style.fontWeight = showShipNames ? "bold" : "normal";
 
-    // Add or remove permanent tooltips on all loaded ships
     activeVessels.forEach(vessel => {
-        const target = vessel.hitbox || vessel.ship; // Works with either setup
+        const target = vessel.hitbox || vessel.ship;
         if (!target) return;
 
         if (showShipNames) {
             target.bindTooltip(vessel.name, { 
                 permanent: true, 
                 direction: "right", 
-                offset:10,0
+                offset: L.point(10, 0),
                 className: "pin-label" 
             });
         } else {
@@ -2227,6 +2226,7 @@ document.getElementById("toggleShipNames").addEventListener("click", (e) => {
         }
     });
 });
+
 
 
 const timeSliderEl = document.getElementById("timeSlider");
