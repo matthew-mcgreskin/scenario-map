@@ -801,6 +801,7 @@ vesselLayer.on("add", async () => {
         const ok = await loadVessels();
         if (ok) {
             vesselsLoaded = true;
+	    advanceSimulation(true);
             isInitialized = false;
         }
     }
@@ -1434,14 +1435,17 @@ function advanceSimulation(forceUpdate = false) {
         const totalEndMinutes = timeToMinutes(vessel.track[totalPoints - 1].time);
 
        // Visibility Toggles
-        const isVisible = clockMinutes >= totalStartMinutes;
-        if (vessel.ship && typeof vessel.ship.setOpacity === 'function') {
-            vessel.ship.setOpacity(isVisible ? 1 : 0);
-        }
-        const tooltipEl = vessel.ship.getTooltip()?.getElement();
-        if (tooltipEl) {
-            tooltipEl.style.display = isVisible ? "" : "none";
-        }
+const isStationary = totalPoints === 1;
+const isVisible = isStationary || clockMinutes >= totalStartMinutes;
+
+if (vessel.ship && typeof vessel.ship.setOpacity === 'function') {
+    vessel.ship.setOpacity(isVisible ? 1 : 0);
+}
+const tooltipEl = vessel.ship.getTooltip()?.getElement();
+if (tooltipEl) {
+    tooltipEl.style.display = isVisible ? "" : "none";
+}
+
 
        // CASE A: Not started yet
         if (clockMinutes < totalStartMinutes) {
@@ -1504,6 +1508,12 @@ function advanceSimulation(forceUpdate = false) {
             vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
             vessel.ship.bringToFront();
         }
+
+	if (vessel.ship) {
+    vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
+    vessel.ship.bringToFront();
+    updateShipTooltip(vessel, lat, lng); // <-- ADD THIS LINE
+}
 
 
 	if (vessel.trackLine) {
@@ -2170,12 +2180,9 @@ document.getElementById("resetReplay").addEventListener("click", () => {
                 initialHeading
             )
         );
+        updateShipTooltip(vessel, startPoint.lat, startPoint.lng);
     });
 
-	  updateShipTooltip(vessel, startPoint.lat, startPoint.lng);
-    });
-
-    // Still inside the Reset button, right after the loop finishes:
     simulationTime = simulationStartTime;
     smoothClockMinutes = timeToMinutes(simulationStartTime);
 
@@ -2240,15 +2247,18 @@ document.getElementById("toggleShipNames").addEventListener("click", (e) => {
         if (!target) return;
 
         if (showShipNames) {
-            target.bindTooltip(vessel.name, { 
-                permanent: true, 
-                direction: "right", 
-                offset: L.point(10, 0),
-                className: "pin-label" 
-            });
-        } else {
-            target.unbindTooltip();
-        }
+    target.bindTooltip(vessel.name, { 
+        permanent: true, 
+        direction: "right", 
+        offset: L.point(10, 0),
+        className: "pin-label" 
+    });
+    const center = vessel.ship.getBounds().getCenter();
+    updateShipTooltip(vessel, center.lat, center.lng);
+} else {
+    target.unbindTooltip();
+}
+
     });
 });
 
