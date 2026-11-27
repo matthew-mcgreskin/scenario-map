@@ -651,25 +651,18 @@
 
 
 
-	<div id="replayControls" style="display:none;">
-
+<div id="replayControls" style="display:none;">
     <button id="playReplay">▶ Play</button>
-
     <button id="pauseReplay">⏸ Pause</button>
-
     <button id="resetReplay">⏹ Reset</button>
-
     <button id="speed1">×1</button>
-
     <button id="speed2">×2</button>
-
     <button id="speed4">×4</button>
-
+    <button id="toggleShipNames">Names</button>
     <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" />
-
     <span id="simClock">00:00</span>
-
 </div>
+
 	
 
   <div class="filters" id="filters">
@@ -736,6 +729,7 @@ const map = L.map("map", {
 const vesselLayer = L.layerGroup();
 const activeVessels = [];
 let vesselsLoaded = false;
+let showShipNames = false;
 
 
 
@@ -1375,7 +1369,14 @@ const trackLine = L.polyline([], {
 `)
 .addTo(vesselLayer);
 
-
+  if (showShipNames) {
+                ship.bindTooltip(vessel.name, { 
+                    permanent: true, 
+                    direction: "right", 
+                    offset:,
+                    className: "pin-label" 
+                });
+            }
 
 
 activeVessels.push({
@@ -2201,6 +2202,31 @@ document.getElementById("speed4").addEventListener("click", () => {
 });
 
 
+document.getElementById("toggleShipNames").addEventListener("click", (e) => {
+    showShipNames = !showShipNames;
+
+    // Highlight button when active
+    e.target.style.backgroundColor = showShipNames ? "#f5ae05" : "";
+    e.target.style.color = showShipNames ? "#0d1b26" : "";
+    e.target.style.fontWeight = showShipNames ? "bold" : "normal";
+
+    // Add or remove permanent tooltips on all loaded ships
+    activeVessels.forEach(vessel => {
+        const target = vessel.hitbox || vessel.ship; // Works with either setup
+        if (!target) return;
+
+        if (showShipNames) {
+            target.bindTooltip(vessel.name, { 
+                permanent: true, 
+                direction: "right", 
+                offset:,
+                className: "pin-label" 
+            });
+        } else {
+            target.unbindTooltip();
+        }
+    });
+});
 
 
 const timeSliderEl = document.getElementById("timeSlider");
