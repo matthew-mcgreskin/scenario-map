@@ -1355,17 +1355,18 @@ const trackLine = L.polyline([], {
 }).addTo(vesselLayer);
 
 
-            const ship = L.polygon(
+       const ship = L.polygon(
     getShipShape(
         currentPoint.lat,
         currentPoint.lng,
-	heading
+        heading
     ),
     {
         color: vessel.colour,
         fillColor: vessel.colour,
         fillOpacity: 1,
-        weight: 2
+        weight: 18,      // Expands the clickable hitbox radius around the hull
+        opacity: 0       // Keeps the expanded border completely invisible
     }
 )
 .bindPopup(`
@@ -1373,6 +1374,7 @@ const trackLine = L.polyline([], {
     IMO: ${vessel.imo}
 `)
 .addTo(vesselLayer);
+
 
 
 
