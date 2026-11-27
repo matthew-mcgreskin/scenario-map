@@ -1408,6 +1408,16 @@ activeVessels.push({
 
 
 
+//HELPER FOR NAMES
+function updateShipTooltip(vessel, lat, lng) {
+    if (!vessel || !vessel.ship) return;
+    const tooltip = vessel.ship.getTooltip();
+    if (tooltip) {
+        tooltip.setLatLng([lat, lng]);
+    }
+}
+
+
 function advanceSimulation(forceUpdate = false) {
 
 	 // FIX: Allow manual slider scrubbing even when paused
@@ -1423,23 +1433,31 @@ function advanceSimulation(forceUpdate = false) {
         const totalStartMinutes = timeToMinutes(vessel.track[0].time);
         const totalEndMinutes = timeToMinutes(vessel.track[totalPoints - 1].time);
 
-        // Visibility Toggles
+       // Visibility Toggles
+        const isVisible = clockMinutes >= totalStartMinutes;
         if (vessel.ship && typeof vessel.ship.setOpacity === 'function') {
-            vessel.ship.setOpacity(clockMinutes >= totalStartMinutes ? 1 : 0);
+            vessel.ship.setOpacity(isVisible ? 1 : 0);
+        }
+        const tooltipEl = vessel.ship.getTooltip()?.getElement();
+        if (tooltipEl) {
+            tooltipEl.style.display = isVisible ? "" : "none";
         }
 
-        // CASE A: Not started yet
+       // CASE A: Not started yet
         if (clockMinutes < totalStartMinutes) {
             const firstPoint = vessel.track[0];
             const nextPoint = vessel.track[1] || firstPoint;
             const heading = getBearing(firstPoint.lat, firstPoint.lng, nextPoint.lat, nextPoint.lng);
 
-            if (vessel.ship) vessel.ship.setLatLngs(getShipShape(firstPoint.lat, firstPoint.lng, heading));
-	if (vessel.trackLine) vessel.trackLine.setLatLngs([]);
+            if (vessel.ship) {
+                vessel.ship.setLatLngs(getShipShape(firstPoint.lat, firstPoint.lng, heading));
+                updateShipTooltip(vessel, firstPoint.lat, firstPoint.lng);
+            }
+            if (vessel.trackLine) vessel.trackLine.setLatLngs([]);
             return; 
         }
 
-        // CASE B: Reached Destination
+     // CASE B: Reached Destination
         if (clockMinutes >= totalEndMinutes) {
             const lastPoint = vessel.track[totalPoints - 1];
             const prevPoint = vessel.track[totalPoints - 2] || lastPoint;
@@ -1448,9 +1466,9 @@ function advanceSimulation(forceUpdate = false) {
             if (vessel.ship) {
                 vessel.ship.setLatLngs(getShipShape(lastPoint.lat, lastPoint.lng, heading));
                 vessel.ship.bringToFront();
+                updateShipTooltip(vessel, lastPoint.lat, lastPoint.lng);
             }
-	if (vessel.trackLine) vessel.trackLine.setLatLngs(vessel.track.map(p => [p.lat, p.lng]));
-
+            if (vessel.trackLine) vessel.trackLine.setLatLngs(vessel.track.map(p => [p.lat, p.lng]));
             return; 
         }
 
@@ -2084,6 +2102,10 @@ function runSmoothSimulationLoop(timestamp) {
     }
 
 
+
+
+
+
     // 5. Fire the dynamic ship tracking map recalculations
     advanceSimulation();
 
@@ -2148,6 +2170,9 @@ document.getElementById("resetReplay").addEventListener("click", () => {
                 initialHeading
             )
         );
+    });
+
+	  updateShipTooltip(vessel, startPoint.lat, startPoint.lng);
     });
 
     // Still inside the Reset button, right after the loop finishes:
