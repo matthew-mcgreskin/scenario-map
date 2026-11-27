@@ -1249,14 +1249,6 @@ const overlaysTree = {
     ]
 },
 
-{
-            label: "<strong>Vessel Tracking</strong>",
-            selectAllCheckbox: true,
-            children: [
-                { label: "Vessel Replay", layer: vesselLayer }
-            ]
-        }
-
 
 
 {
@@ -2041,7 +2033,7 @@ document.getElementById("reset").addEventListener("click", () => {
       mca, gcr, lnr, nnr,
       sepaPoints, sepaPolygons,
       sepaZones, sepaSignage,
-      coordsLayer, vesselLayer
+      coordsLayer, vesselLayer,plannerLayer
     ].forEach(layer => {
         if (map.hasLayer(layer)) {
             map.removeLayer(layer);
