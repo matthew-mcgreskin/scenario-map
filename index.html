@@ -809,6 +809,9 @@ function advanceClock() {
 vesselLayer.on("add", async () => {
     if (map.hasLayer(plannerLayer)) {
         map.removeLayer(plannerLayer);
+        if (layerControl && typeof layerControl._update === "function") {
+            layerControl._update();
+        }
     }
 
     document.getElementById("replayControls").style.display = "flex";
@@ -864,11 +867,15 @@ function refreshPlannerTimes() {
 plannerLayer.on("add", () => {
     if (map.hasLayer(vesselLayer)) {
         map.removeLayer(vesselLayer);
+        if (layerControl && typeof layerControl._update === "function") {
+            layerControl._update();
+        }
     }
 
     document.getElementById("plannerControls").style.display = "flex";
     map.getContainer().style.cursor = "crosshair";
 });
+
 
 
 plannerLayer.on("remove", () => {
@@ -1263,7 +1270,6 @@ const overlaysTree = {
 
 {
     label: "<strong>Vessel Tracking</strong>",
-    selectAllCheckbox: true,
     children: [
         { label: "Vessel Replay", layer: vesselLayer },
         { label: "Voyage Planner", layer: plannerLayer }
