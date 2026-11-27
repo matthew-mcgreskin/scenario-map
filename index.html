@@ -1290,9 +1290,9 @@ async function loadVessels() {
 
 
 simulationStartTime = earliestTime;
-
 simulationTime = earliestTime;
 simulationEndTime = latestTime;
+smoothClockMinutes = timeToMinutes(earliestTime);
 
 
 // ---> PASTE THE NEW SLIDER CODE RIGHT HERE <---
@@ -1503,11 +1503,6 @@ if (tooltipEl) {
         const lng = interpolate(currentPoint.lng, nextPoint.lng, vessel.progress);
 
         const heading = getBearing(currentPoint.lat, currentPoint.lng, nextPoint.lat, nextPoint.lng);
-
-        if (vessel.ship) {
-            vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
-            vessel.ship.bringToFront();
-        }
 
 	if (vessel.ship) {
     vessel.ship.setLatLngs(getShipShape(lat, lng, heading));
